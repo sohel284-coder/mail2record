@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Mail2Record{% endblock %}
+
+{% block content %}
+    <h1>Dashboard</h1>
+    <p>Welcome to Mail2Record. This placeholder page proves that templates,
+       jQuery, and the DRF API layer are wired up end-to-end.</p>
+
+    <section class="card">
+        <h2>API health</h2>
+        <p>
+            Backend status:
+            <span id="api-health" class="status pending">checking…</span>
+        </p>
+    </section>
+{% endblock %}

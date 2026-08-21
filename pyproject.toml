@@ -1,0 +1,42 @@
+[project]
+name = "mail2record"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "django>=6.1",
+    "django-cors-headers>=4.9.0",
+    "djangorestframework>=3.18.0",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.5",
+    "psycopg[binary]>=3.3.4",
+    "pydantic>=2.13.4",
+    "python-decouple>=3.8",
+]
+
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+    "django-stubs>=6.1.0",
+    "pytest>=9.1.1",
+    "pytest-django>=4.14.0",
+    "ruff>=0.16.4",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+addopts = "-v"
+
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]

@@ -1,0 +1,70 @@
+You are setting up Phase 0 of the "Mail2Record" project on Ubuntu. Follow Django and Python best practices throughout. Work step by step, showing me each command before running it, and confirm success at each step before moving on.
+
+CONTEXT
+- OS: Ubuntu (local dev machine)
+- Python 3.13 is already installed
+- Ollama is already installed and available
+- PostgreSQL needs to be installed/configured
+- Use `uv` for virtual environment + dependency management (not pip/venv/poetry)
+- Project name: mail2record
+- Backend API layer: Django REST Framework (DRF)
+- Frontend: Django Templates + jQuery for AJAX/interactivity (no React/Vue)
+
+GOAL
+A running Django project connected to PostgreSQL, with DRF wired in, in a Git repo, following best practices, with a clean app skeleton ready for Phase 1 development.
+
+TASKS
+
+1. Project scaffolding with uv
+   - Create a project directory `mail2record/`
+   - Initialize with `uv init` (or equivalent for a Django project)
+   - Add dependencies via `uv add`: django, djangorestframework, psycopg[binary], python-decouple (or django-environ), pydantic, beautifulsoup4, pandas, openpyxl, django-cors-headers (in case the API is ever called cross-origin during dev)
+   - Add dev dependencies via `uv add --dev`: black, ruff, django-stubs, pytest, pytest-django
+   - Confirm `uv run python --version` shows 3.13 inside the venv
+
+2. PostgreSQL setup
+   - Check if PostgreSQL is installed; if not, install via apt
+   - Create a local database `mail2record_dev` and a dedicated PostgreSQL user/role (not the postgres superuser) with a generated password
+   - Verify connection with psql before touching Django
+
+3. Django project + app skeleton
+   - Run `uv run django-admin startproject config .`
+   - Create apps: accounts, templates_app, emails, extraction, records, exports, dashboard
+     (use `uv run python manage.py startapp <name>` for each)
+   - Register all apps in INSTALLED_APPS, plus 'rest_framework' and 'corsheaders'
+   - Organize settings using a best-practice pattern: split settings into base/dev/prod if you judge it valuable for a project this size, or a single settings.py with environment-driven config — your call, but explain the tradeoff briefly before choosing
+
+4. DRF setup
+   - Add a basic DRF config block in settings (DEFAULT_AUTHENTICATION_CLASSES, DEFAULT_PERMISSION_CLASSES) — default to SessionAuthentication since the frontend is server-rendered + jQuery (same-origin), not a separate SPA; note that token/JWT auth can be added later if a mobile or external client shows up
+   - Wire a root `api/` URL namespace in config/urls.py (e.g. path('api/', include('...'))) even though no endpoints exist yet
+   - Create one trivial DRF endpoint (e.g. GET /api/health/) returning {"status": "ok"} to prove DRF is wired correctly, with a matching serializer-free APIView or function-based view
+
+5. Environment & secrets
+   - Add python-decouple or django-environ
+   - Create `.env` (gitignored) and `.env.example` (committed) with: SECRET_KEY, DEBUG, DATABASE_URL (or individual DB_* vars), ALLOWED_HOSTS
+   - Wire settings.py to read from .env; never hardcode secrets
+   - Configure DATABASES to use PostgreSQL via the env vars
+
+6. Git setup
+   - `git init`
+   - Add a proper Python/Django .gitignore (venv, __pycache__, .env, *.pyc, db artifacts, media/static build output, .idea/.vscode if relevant)
+   - Make the first commit with a clear message
+   - Suggest (but don't force) a basic branch convention (e.g. main + feature branches)
+
+7. Base template & layout
+   - Create `templates/base.html` with a simple nav bar and a login-aware layout ({% if user.is_authenticated %})
+   - Include jQuery via CDN (or a pinned local copy — your call, explain tradeoff) in base.html so every page can use it
+   - Configure TEMPLATES DIRS and STATICFILES to find templates and static assets
+   - Add a minimal CSS file and a minimal `main.js` (jQuery-based) demonstrating one small AJAX call to the /api/health/ endpoint from a placeholder dashboard page, to prove templates + jQuery + DRF are all connected end-to-end
+   - Create one placeholder view/URL rendering this page
+
+8. Verification
+   - Run migrations against PostgreSQL
+   - Run `uv run python manage.py runserver` and confirm: the placeholder page loads, shows the nav bar, and the jQuery AJAX call successfully hits /api/health/ and displays "ok" on the page
+   - Run `uv run python manage.py check --deploy` and note any warnings (don't fix production-only warnings now, just surface them)
+
+9. Wrap-up
+   - Give me a short summary of what was created, the final directory structure, and any decisions you made where you had to choose between two reasonable approaches
+   - List what's explicitly deferred to Phase 1 (data models, auth views/serializers, admin registration, real API endpoints)
+
+Do not install or configure Celery, Redis, Docker, or any JS framework (React/Vue/etc) — this is explicitly out of scope for Phase 0/MVP per the project's SRS. DRF and jQuery are the only additions to the original stack.
