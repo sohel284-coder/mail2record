@@ -55,7 +55,7 @@ TASKS
    - Create `templates/base.html` with a simple nav bar and a login-aware layout ({% if user.is_authenticated %})
    - Include jQuery via CDN (or a pinned local copy — your call, explain tradeoff) in base.html so every page can use it
    - Configure TEMPLATES DIRS and STATICFILES to find templates and static assets
-   - Add a minimal CSS file and a minimal `main.js` (jQuery-based) demonstrating one small AJAX call to the /api/health/ endpoint from a placeholder dashboard page, to prove templates + jQuery + DRF are all connected end-to-end
+   - Add a minimal CSS file and a minimal `app.js` (jQuery-based) demonstrating one small AJAX call to the /api/health/ endpoint from a placeholder dashboard page, to prove templates + jQuery + DRF are all connected end-to-end
    - Create one placeholder view/URL rendering this page
 
 8. Verification

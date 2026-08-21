@@ -148,12 +148,14 @@
             data: JSON.stringify(payload),
         })
             .done(function () {
+                window.showToast("Template saved.", "success");
                 window.location.href = "/templates/";
             })
             .fail(function (xhr) {
                 const msg =
                     (xhr.responseJSON && JSON.stringify(xhr.responseJSON)) ||
                     "Save failed.";
+                window.showToast(msg, "warning");
                 $("#save-status").text(msg).addClass("error");
             });
     });

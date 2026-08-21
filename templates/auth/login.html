@@ -1,12 +1,46 @@
 {% extends "base.html" %}
-{% block content %}
-<div style="max-width:360px;margin:80px auto;">
-  <h2>Mail2Record — Login</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-  </form>
-  {% if form.errors %}<p style="color:red;">Invalid username or password.</p>{% endif %}
-</div>
+{% load static %}
+{% block title %}Sign in · Mail2Record{% endblock %}
+
+{% block guest_content %}
+<section class="login-screen" aria-label="Mail2Record login">
+    <div class="login-visual">
+        <div class="login-visual-inner">
+            <div class="brand-lockup brand-lockup-light">
+                <span class="brand-mark">M2R</span>
+                <span class="brand-name">Mail<span>2</span>Record</span>
+            </div>
+            <div class="login-quote">
+                <span class="eyebrow eyebrow-amber">LOCAL-FIRST AUTOMATION</span>
+                <h1>Give every email a reliable next step.</h1>
+                <p>Collect the source. Extract the signal. Keep a human in the loop.</p>
+            </div>
+            <div class="login-flow-mini" aria-hidden="true">
+                <span>Inbox</span><i>→</i><span>Draft</span><i>→</i><span>Record</span>
+            </div>
+        </div>
+    </div>
+    <div class="login-panel">
+        <div class="login-panel-top">
+            <span class="eyebrow">WORKSPACE ACCESS</span>
+            <span class="login-dot"></span>
+        </div>
+        <div class="login-copy">
+            <h2>Sign in to your desk</h2>
+            <p>Use your Mail2Record credentials to continue.</p>
+        </div>
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            <label for="id_username">Username</label>
+            <input id="id_username" name="username" type="text" autocomplete="username" required autofocus>
+            <label for="id_password">Password</label>
+            <input id="id_password" name="password" type="password" autocomplete="current-password" required>
+            <button type="submit" class="button button-primary button-wide">Enter workspace <span>↗</span></button>
+        </form>
+        {% if form.errors %}
+            <p class="login-error">Invalid username or password.</p>
+        {% endif %}
+        <p class="login-footnote">Your source emails stay preserved. Nothing here is a demo.</p>
+    </div>
+</section>
 {% endblock %}

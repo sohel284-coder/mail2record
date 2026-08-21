@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Overview · Mail2Record{% endblock %}
+{% block page_title %}Operations overview{% endblock %}
+
+{% block content %}
+<section id="page-overview">
+    <div class="page-intro">
+        <div>
+            <span class="eyebrow">WORKSPACE</span>
+            <h1>The desk is clear.</h1>
+            <p>Review is the only open handoff. Here's what's moved so far.</p>
+        </div>
+        <button id="sync-now" class="button button-outline"><span class="sync-glyph">↻</span><span class="button-label">Sync now</span></button>
+    </div>
+
+    <div class="metric-grid">
+        <article class="metric-card metric-card-primary">
+            <div class="metric-label"><span class="metric-dot dot-amber"></span>Emails processed</div>
+            <strong>{{ emails_total }}</strong>
+            <div class="metric-meta"><span>Total collected</span></div>
+        </article>
+        <article class="metric-card">
+            <div class="metric-label"><span class="metric-dot dot-ink"></span>Drafts to review</div>
+            <strong>{{ drafts_count }}</strong>
+            <div class="metric-meta"><span class="metric-attention">Needs attention</span></div>
+        </article>
+        <article class="metric-card">
+            <div class="metric-label"><span class="metric-dot dot-mint"></span>Approved records</div>
+            <strong>{{ approved_count }}</strong>
+            <div class="metric-meta"><span>All time</span></div>
+        </article>
+        <article class="metric-card metric-card-muted">
+            <div class="metric-label"><span class="metric-dot dot-clay"></span>Active templates</div>
+            <strong>{{ active_templates.count }}</strong>
+            <div class="metric-meta"><span>{% for t in active_templates %}{{ t.name }}{% if not forloop.last %}, {% endif %}{% empty %}None yet{% endfor %}</span></div>
+            <a href="{% url 'templates_ui:list' %}" class="metric-link">Manage templates <span>→</span></a>
+        </article>
+    </div>
+
+    <div class="content-grid content-grid-bottom">
+        <article class="panel recent-panel">
+            <div class="panel-head">
+                <div><span class="eyebrow">RECENT DRAFTS</span><h2>Keep the queue moving</h2></div>
+{#                <a class="text-button" href="{% url 'records_ui:review_queue' %}">See all drafts <span>→</span></a>#}
+            </div>
+            <div class="draft-list">
+                {% for record in recent_drafts %}
+                <a class="draft-row" href="{% url 'records_ui:review_detail' record.pk %}">
+                    <span class="draft-mark mark-amber">{{ record.template.name|slice:":3"|upper }}</span>
+                    <span class="draft-main">
+                        <strong>{{ record.email.subject|default:"(no subject)" }}</strong>
+                        <small>{{ record.email.sender }} · {{ record.created_at|timesince }} ago</small>
+                    </span>
+                    <span class="draft-template">{{ record.template.name }}</span>
+                    <span class="status-pill status-review">Review</span>
+                    <span class="draft-arrow">→</span>
+                </a>
+                {% empty %}
+                <p class="hint">No drafts waiting. New emails will show up here once extraction runs.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel accuracy-panel">
+            <div class="panel-head">
+                <div><span class="eyebrow">QUALITY SIGNAL</span><h2>Extraction health</h2></div>
+            </div>
+            <p class="quality-copy">A practical review indicator based on required fields found and validation checks — not a claim of mathematical confidence.</p>
+        </article>
+    </div>
+</section>
+{% endblock %}

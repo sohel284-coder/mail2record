@@ -1,55 +1,67 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}{% if template_id %}Edit{% else %}Create{% endif %} Template · Mail2Record{% endblock %}
+{% block page_title %}{% if template_id %}Edit Template{% else %}Create Template{% endif %}{% endblock %}
 
 {% block content %}
-<h1>{% if template_id %}Edit Template{% else %}Create Template{% endif %}</h1>
-
-<div id="template-app" data-template-id="{{ template_id|default_if_none:'' }}">
-
-    <div class="card">
-        <label>Template Name</label>
-        <input type="text" id="tpl-name" placeholder="e.g. CSB">
-
-        <label>Description</label>
-        <textarea id="tpl-description" placeholder="Optional"></textarea>
+<section id="page-template-form" data-template-id="{{ template_id|default_if_none:'' }}">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">SCHEMA CONFIGURATION</span>
+            <h1>{% if template_id %}Edit template{% else %}Create a template{% endif %}</h1>
+            <p>Define the fields Mail2Record should look for in matching emails.</p>
+        </div>
     </div>
 
-    <div class="card" id="upload-card">
-        <label>Upload CSV/Excel to detect columns</label>
+    <div class="panel form-panel">
+        <label for="tpl-name">Template name</label>
+        <input type="text" id="tpl-name" placeholder="e.g. CSB">
+
+        <label for="tpl-description">Description</label>
+        <textarea id="tpl-description" placeholder="Optional" rows="3"></textarea>
+    </div>
+
+    <div class="panel form-panel" id="upload-card">
+        <label for="tpl-file">Upload CSV or Excel to detect columns</label>
         <input type="file" id="tpl-file" accept=".csv,.xlsx,.xls">
-        <button type="button" id="detect-btn">Detect Columns</button>
-        <p id="detect-status" class="hint"></p>
+        <div class="form-panel-actions">
+            <button type="button" id="detect-btn" class="button button-outline">Detect columns</button>
+            <span id="detect-status" class="hint"></span>
+        </div>
         <p class="hint">Source file: <span id="source-file-label">—</span></p>
     </div>
 
-    <div class="card">
-        <div class="page-header">
-            <h2>Fields</h2>
-            <button type="button" id="add-field-btn">+ Add Field Manually</button>
+    <div class="panel table-panel">
+        <div class="table-toolbar">
+            <h2 class="table-panel-title">Fields</h2>
+            <button type="button" id="add-field-btn" class="button button-outline">+ Add field manually</button>
         </div>
-        <table class="data-table" id="fields-table">
-            <thead>
-                <tr>
-                    <th>Machine Name</th>
-                    <th>Label</th>
-                    <th>Type</th>
-                    <th>Required</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="fields-tbody"></tbody>
-        </table>
+        <div class="table-scroll">
+            <table id="fields-table">
+                <thead>
+                    <tr>
+                        <th>Machine name</th>
+                        <th>Label</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="fields-tbody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="card">
-        <label><input type="checkbox" id="tpl-active" checked> Active</label>
+    <div class="panel form-panel">
+        <label class="checkbox-label"><input type="checkbox" id="tpl-active" checked> Active</label>
     </div>
 
-    <button type="button" id="save-btn" class="button">Save Template</button>
-    <a href="{% url 'templates_ui:list' %}" class="button-secondary">Cancel</a>
-    <p id="save-status" class="hint"></p>
-</div>
+    <div class="form-actions">
+        <button type="button" id="save-btn" class="button button-primary">Save template <span>↗</span></button>
+        <a href="{% url 'templates_ui:list' %}" class="button button-ghost">Cancel</a>
+        <span id="save-status" class="hint"></span>
+    </div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
@@ -67,8 +79,8 @@
             </select>
         </td>
         <td><input type="checkbox" class="f-required" __CHECKED__></td>
-        <td><button type="button" class="remove-field-btn">✕</button></td>
+        <td><button type="button" class="remove-field-btn icon-button" aria-label="Remove field">✕</button></td>
     </tr>
 </script>
-<script src="{% static 'js/template_form.js' %}"></script>
+<script src="{% static 'js/template/template_form.js' %}"></script>
 {% endblock %}

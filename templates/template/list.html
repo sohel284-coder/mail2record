@@ -1,37 +1,49 @@
 {% extends "base.html" %}
 {% block title %}Templates · Mail2Record{% endblock %}
-{% block content %}
-<div class="page-header">
-    <h1>Templates</h1>
-    <a class="button" href="{% url 'templates_ui:create' %}">+ Create Template</a>
-</div>
+{% block page_title %}Templates{% endblock %}
 
-<table class="data-table">
-    <thead>
-        <tr>
-            <th>Template</th>
-            <th>Fields</th>
-            <th>Version</th>
-            <th>Status</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+{% block content %}
+<section id="page-templates">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">SCHEMA CONFIGURATION</span>
+            <h1>Templates</h1>
+            <p>Configure the fields Mail2Record should find in every incoming email.</p>
+        </div>
+        <a href="{% url 'templates_ui:create' %}" class="button button-primary">+ Create template</a>
+    </div>
+
+    <div class="template-banner">
+        <div class="template-banner-mark">▤</div>
+        <div>
+            <strong>One template, many records.</strong>
+            <p>Upload a CSV or Excel header once. The field schema stays reusable while every extracted value remains flexible JSON.</p>
+        </div>
+        <span class="eyebrow eyebrow-amber">DYNAMIC JSONB</span>
+    </div>
+
+    <div class="template-grid">
         {% for t in templates %}
-        <tr>
-            <td>{{ t.name }}</td>
-            <td>{{ t.fields.count }}</td>
-            <td>{{ t.version }}</td>
-            <td>
-                <span class="badge {% if t.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+        <article class="panel template-card">
+            <div class="template-card-head">
+                <div class="template-token token-amber">{{ t.name|slice:":3"|upper }}</div>
+                <span class="status-pill {% if t.is_active %}status-approved{% else %}status-rejected{% endif %}">
                     {% if t.is_active %}Active{% else %}Inactive{% endif %}
                 </span>
-            </td>
-            <td><a href="{% url 'templates_ui:edit' t.pk %}">Edit</a></td>
-        </tr>
+            </div>
+            <h2>{{ t.name }}</h2>
+            <p>{{ t.description|default:"No description yet." }}</p>
+            <div class="template-fields">
+                {% for f in t.fields.all|slice:":8" %}<span>{{ f.label }}</span>{% endfor %}
+            </div>
+            <div class="template-card-foot">
+                <span>{{ t.fields.count }} fields · v{{ t.version }}</span>
+                <a class="text-button" href="{% url 'templates_ui:edit' t.pk %}">Edit template →</a>
+            </div>
+        </article>
         {% empty %}
-        <tr><td colspan="5">No templates yet. Create your first one.</td></tr>
+        <p class="hint">No templates yet. Create your first one.</p>
         {% endfor %}
-    </tbody>
-</table>
+    </div>
+</section>
 {% endblock %}
