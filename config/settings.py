@@ -34,13 +34,13 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     # Local apps
-    "accounts",
-    "templates_app",
-    "emails",
-    "extraction",
-    "records",
-    "exports",
-    "dashboard",
+    "apps.accounts",
+    "apps.templates_app",
+    "apps.emails",
+    "apps.extraction",
+    "apps.records",
+    "apps.exports",
+    "apps.dashboard",
 ]
 
 MIDDLEWARE = [
