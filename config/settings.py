@@ -19,6 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", cast=Csv())
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
 
 
 # Application definition
@@ -34,8 +35,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     # Local apps
+    "apps.core",
     "apps.accounts",
-    "apps.templates_app",
+    "apps.template",
     "apps.emails",
     "apps.extraction",
     "apps.records",
@@ -166,3 +168,8 @@ MAILERS = {
         "BACKEND": "django.core.mail.backends.console.EmailBackend",
     },
 }
+
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard:index"
+LOGOUT_REDIRECT_URL = "login"

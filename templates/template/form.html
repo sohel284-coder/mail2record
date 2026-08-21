@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if template_id %}Edit{% else %}Create{% endif %} Template · Mail2Record{% endblock %}
+
+{% block content %}
+<h1>{% if template_id %}Edit Template{% else %}Create Template{% endif %}</h1>
+
+<div id="template-app" data-template-id="{{ template_id|default_if_none:'' }}">
+
+    <div class="card">
+        <label>Template Name</label>
+        <input type="text" id="tpl-name" placeholder="e.g. CSB">
+
+        <label>Description</label>
+        <textarea id="tpl-description" placeholder="Optional"></textarea>
+    </div>
+
+    <div class="card" id="upload-card">
+        <label>Upload CSV/Excel to detect columns</label>
+        <input type="file" id="tpl-file" accept=".csv,.xlsx,.xls">
+        <button type="button" id="detect-btn">Detect Columns</button>
+        <p id="detect-status" class="hint"></p>
+        <p class="hint">Source file: <span id="source-file-label">—</span></p>
+    </div>
+
+    <div class="card">
+        <div class="page-header">
+            <h2>Fields</h2>
+            <button type="button" id="add-field-btn">+ Add Field Manually</button>
+        </div>
+        <table class="data-table" id="fields-table">
+            <thead>
+                <tr>
+                    <th>Machine Name</th>
+                    <th>Label</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="fields-tbody"></tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <label><input type="checkbox" id="tpl-active" checked> Active</label>
+    </div>
+
+    <button type="button" id="save-btn" class="button">Save Template</button>
+    <a href="{% url 'templates_ui:list' %}" class="button-secondary">Cancel</a>
+    <p id="save-status" class="hint"></p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script id="field-row-template" type="text/template">
+    <tr data-index="__INDEX__">
+        <td><input type="text" class="f-name" value="__NAME__"></td>
+        <td><input type="text" class="f-label" value="__LABEL__"></td>
+        <td>
+            <select class="f-type">
+                <option value="string" __SEL_STRING__>String</option>
+                <option value="integer" __SEL_INTEGER__>Integer</option>
+                <option value="number" __SEL_NUMBER__>Number</option>
+                <option value="date" __SEL_DATE__>Date</option>
+                <option value="boolean" __SEL_BOOLEAN__>Boolean</option>
+            </select>
+        </td>
+        <td><input type="checkbox" class="f-required" __CHECKED__></td>
+        <td><button type="button" class="remove-field-btn">✕</button></td>
+    </tr>
+</script>
+<script src="{% static 'js/template_form.js' %}"></script>
+{% endblock %}

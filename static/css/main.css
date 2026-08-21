@@ -103,3 +103,20 @@ body {
 .link-button:hover {
     color: var(--color-primary);
 }
+
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
+.card label { display: block; font-weight: 600; margin-bottom: 0.25rem; margin-top: 0.75rem; }
+.card input[type="text"], .card textarea, .data-table select, .data-table input[type="text"] {
+    width: 100%; padding: 0.4rem; box-sizing: border-box;
+}
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { border-bottom: 1px solid #eee; padding: 0.5rem; text-align: left; }
+.badge { padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.85rem; }
+.badge-active { background: #d4edda; color: #155724; }
+.badge-inactive { background: #f0f0f0; color: #666; }
+.hint { font-size: 0.9rem; color: #666; }
+.hint.error { color: #c0392b; }
+.button, .button-secondary { padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; display: inline-block; margin-right: 0.5rem; cursor: pointer; }
+.button { background: #1f4e79; color: #fff; border: none; }
+.button-secondary { background: #eee; color: #333; }

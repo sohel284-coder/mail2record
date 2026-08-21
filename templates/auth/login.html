@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:360px;margin:80px auto;">
+  <h2>Mail2Record — Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+  </form>
+  {% if form.errors %}<p style="color:red;">Invalid username or password.</p>{% endif %}
+</div>
+{% endblock %}
