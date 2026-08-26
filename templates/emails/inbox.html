@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Inbox · Mail2Record{% endblock %}
+{% block page_title %}Inbox{% endblock %}
+
+{% block content %}
+<section id="page-inbox">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">EMAIL COLLECTION</span>
+            <h1>Inbox</h1>
+            <p>Original emails stay preserved as the source of truth for every record.</p>
+        </div>
+        <button id="sync-now-2" class="button button-outline"><span class="sync-glyph">↻</span> Sync mailbox</button>
+    </div>
+
+    <div class="panel table-panel">
+        <div class="table-toolbar">
+            <div class="search-wrap">
+                <span>⌕</span>
+                <input id="inbox-search" type="search" placeholder="Search sender, subject, or message ID">
+            </div>
+            <div class="toolbar-controls">
+                <select id="inbox-status" aria-label="Filter inbox status">
+                    <option value="">All statuses</option>
+                    <option value="false">Draft</option>
+                    <option value="true">Processed</option>
+                </select>
+                <button id="clear-filters" class="button button-ghost">Clear filters</button>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table id="inbox-table">
+                <thead>
+                    <tr>
+                        <th>Sender</th>
+                        <th>Subject</th>
+                        <th>Received</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="inbox-tbody">
+                    <tr><td colspan="5" class="hint">Loading…</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-foot">
+            <span id="inbox-count">Showing 0 of 0 emails</span>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/emails/inbox.js' %}"></script>
+{% endblock %}

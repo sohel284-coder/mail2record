@@ -31,9 +31,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_filters",
     # Third-party
     "rest_framework",
     "corsheaders",
+
     # Local apps
     "apps.core",
     "apps.accounts",
@@ -68,6 +70,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.dashboard.context_processors.sidebar_counts",
             ],
         },
     },
@@ -173,3 +176,9 @@ MAILERS = {
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard:index"
 LOGOUT_REDIRECT_URL = "login"
+
+
+# START LLM CONFIGURATION
+AI_PROVIDER = config("AI_PROVIDER", "ollama")
+OLLAMA_MODEL = config("OLLAMA_MODEL")
+# END OF LLM CONFIGURATION

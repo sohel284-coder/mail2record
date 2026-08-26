@@ -1,0 +1,17 @@
+[
+  {
+    "id": "email_001",
+    "template": "CSB",
+    "email_body": "Dear Sir,\n\nPlease find the shipment details below for our September booking.\n\nPO No: PO-45892\nBuyer: ABC Garments\nProduct: Cotton Shirt\nQty: 15,000 pcs\nVessel: MSC X\nETD: 20 September\nETA: 27 September\nDestination: Chittagong\n\nKindly confirm receipt.\n\nBest regards,\nSamira Chowdhury",
+    "expected": {
+  "po_number": "PO-45892",
+  "customer_name": "ABC Garments",
+  "product": "Cotton Shirt",
+  "quantity": 15000,
+  "vessel_name": null,
+  "etd": "2026-09-20",
+  "eta": "2026-09-27",
+  "destination": "Chittagong"
+}
+  }
+]

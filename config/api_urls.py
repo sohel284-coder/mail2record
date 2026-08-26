@@ -8,5 +8,7 @@ app_name = "api"
 
 urlpatterns = [
     path("health/", api_views.HealthView.as_view(), name="health"),
+    path("", include("apps.accounts.urls")),
     path("", include("apps.template.urls")),
+    path("", include("apps.emails.urls")),
 ]

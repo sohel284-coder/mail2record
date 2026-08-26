@@ -131,7 +131,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .page-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 40px; }
 .page-intro-compact { margin-bottom: 28px; }
 .page-intro h1 { margin: 13px 0 11px; color: var(--ink); font-size: clamp(31px, 4vw, 28px); line-height: .98; letter-spacing: -.065em; }
-.page-intro p { margin: 0; color: var(--ink-faint); font: 12px/1.7 var(--mono); }
+.page-intro p { margin: 0; color: var(--ink-faint); font: 12px/1.2 var(--mono); }
 .button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; gap: 10px; border: 1px solid transparent; border-radius: 3px; padding: 0 15px; white-space: nowrap; font: 11px var(--mono); text-decoration: none; transition: color .18s var(--ease-out), background .18s var(--ease-out), border-color .18s var(--ease-out), transform .16s var(--ease-out), box-shadow .18s var(--ease-out); }
 .button:active { transform: scale(.97); }
 .button-primary { color: var(--ink); background: var(--amber); box-shadow: 0 5px 13px rgba(158,104,22,.12); }
