@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Records · Mail2Record{% endblock %}
+{% block page_title %}Records{% endblock %}
+
+{% block content %}
+<section id="page-records">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">STRUCTURED OUTPUT</span>
+            <h1>Records</h1>
+            <p>Approved and historical records. Filter, then export to Excel or CSV.</p>
+        </div>
+        <div class="export-actions">
+            <a id="export-csv" class="button button-outline" href="#">↓ CSV</a>
+            <a id="export-xlsx" class="button button-primary">↓ Excel</a>
+        </div>
+    </div>
+
+    <div class="panel table-panel">
+        <div class="table-toolbar">
+            <div class="search-wrap">
+                <span>⌕</span>
+                <input id="rec-search" type="search" placeholder="Search subject, sender, or extracted values">
+            </div>
+            <div class="toolbar-controls">
+                <select id="rec-template" aria-label="Filter by template">
+                    <option value="">All templates</option>
+                    {% for t in templates %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+                </select>
+                <select id="rec-status" aria-label="Filter by status">
+                    <option value="">All statuses</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="APPROVED" selected>Approved</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+                <input id="rec-after" class="filter-date" type="date" aria-label="Created on or after">
+                <input id="rec-before" class="filter-date" type="date" aria-label="Created on or before">
+                <button id="rec-clear" class="button button-ghost">Clear</button>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table id="rec-table">
+                <thead>
+                    <tr id="rec-thead-row">
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody id="rec-tbody"><tr><td class="hint">Loading…</td></tr></tbody>
+            </table>
+        </div>
+        <div class="table-foot"><span id="rec-count">Showing 0 records</span></div>
+    </div>
+</section>
+
+<div id="record-modal" class="modal-overlay">
+    <div class="modal-panel modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="record-modal-title">
+        <button type="button" id="record-modal-close" class="icon-button modal-close" aria-label="Close">✕</button>
+        <span class="eyebrow" id="record-modal-eyebrow">RECORD</span>
+        <div class="record-modal-head">
+            <h2 id="record-modal-title">—</h2>
+            <span id="record-modal-status" class="status-pill"></span>
+        </div>
+        <div class="record-modal-meta" id="record-modal-meta"></div>
+        <div class="modal-actions">
+            <a id="record-modal-open" class="button button-primary" href="#">Open full record →</a>
+            <button type="button" class="button button-ghost" id="record-modal-close-btn">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/records/list.js' %}"></script>
+{% endblock %}

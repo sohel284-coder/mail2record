@@ -1,17 +1,285 @@
-[
-  {
-    "id": "email_001",
-    "template": "CSB",
-    "email_body": "Dear Sir,\n\nPlease find the shipment details below for our September booking.\n\nPO No: PO-45892\nBuyer: ABC Garments\nProduct: Cotton Shirt\nQty: 15,000 pcs\nVessel: MSC X\nETD: 20 September\nETA: 27 September\nDestination: Chittagong\n\nKindly confirm receipt.\n\nBest regards,\nSamira Chowdhury",
-    "expected": {
-  "po_number": "PO-45892",
-  "customer_name": "ABC Garments",
-  "product": "Cotton Shirt",
-  "quantity": 15000,
-  "vessel_name": null,
-  "etd": "2026-09-20",
-  "eta": "2026-09-27",
-  "destination": "Chittagong"
+{
+  "template": "Delivery Instruction",
+  "table_fields": [
+    "order_no", "cps_id", "special_code", "style_name", "assorted_qty",
+    "unassorted_qty", "total_cartons", "final_destination",
+    "delivery_place_of_vendor", "target_shipment", "shipment_route",
+    "lc_ref_no", "lc_ref_bank", "delivery_location", "vehicle_type", "gtip"
+  ],
+  "free_text_fields": ["buyer_name", "delivery_date", "delivery_warehouse"],
+  "cases": [
+    {
+      "id": "di_01_real_aba_fashions",
+      "source": "real (dummy-but-realistic) ABA FASHIONS delivery instruction",
+      "has_table": true,
+      "body_html": "<html><body><p>Dear Logistics Team,</p><p>Please arrange delivery of the below consignment for <b>ABA FASHIONS LTD</b>. The cargo must reach the <b>Chittagong Warehouse</b> no later than 25-08-2026 16:00. Kindly confirm the transport allocation by return mail.</p><table border=\"1\"><thead><tr><th>Order No</th><th>CPS ID</th><th>Special Code</th><th>Style Name</th><th>Assorted Qty</th><th>Unassorted Qty</th><th>Total Cartons</th><th>Final Destination</th><th>Delivery Place of Vendor</th><th>Target Shipment</th><th>Shipment Route</th><th>LC Ref No</th><th>LC Ref Bank</th><th>Delivery Location</th><th>Vehicle Type</th><th>GTIP</th></tr></thead><tbody><tr><td>ORD-2793757</td><td>CPS-88213</td><td>SC-09</td><td>Mens Crew Neck Tee</td><td>12,000</td><td>1,500</td><td>420</td><td>Hamburg</td><td>Chittagong</td><td>W35-2026</td><td>CTG-HAM via Colombo</td><td>LC-4471902</td><td>Standard Chartered</td><td>Chittagong Port</td><td>Covered Van</td><td>6109.10.00.00</td></tr></tbody></table><p>Regards,<br>Vendor Coordination Desk</p></body></html>",
+      "expected_table": {
+        "order_no": "ORD-2793757",
+        "cps_id": "CPS-88213",
+        "special_code": "SC-09",
+        "style_name": "Mens Crew Neck Tee",
+        "assorted_qty": 12000,
+        "unassorted_qty": 1500,
+        "total_cartons": 420,
+        "final_destination": "Hamburg",
+        "delivery_place_of_vendor": "Chittagong",
+        "target_shipment": "W35-2026",
+        "shipment_route": "CTG-HAM via Colombo",
+        "lc_ref_no": "LC-4471902",
+        "lc_ref_bank": "Standard Chartered",
+        "delivery_location": "Chittagong Port",
+        "vehicle_type": "Covered Van",
+        "gtip": "6109.10.00.00"
+      },
+      "expected_free_text": {
+        "buyer_name": "ABA FASHIONS LTD",
+        "delivery_date": "2026-08-25",
+        "delivery_warehouse": "Chittagong Warehouse"
+      }
+    },
+    {
+      "id": "di_02_northstar_compact_table",
+      "source": "invented",
+      "has_table": true,
+      "body_html": "<html><body><p>Hi team,</p><p>Delivery deadline: 02 September 2026. Please deliver to the <b>Pangaon ICD Warehouse</b>. Buyer for this lot is <b>NORTH STAR APPARELS LTD</b>.</p><table><tr><th>Order No</th><th>CPS ID</th><th>Style Name</th><th>Total Cartons</th><th>Final Destination</th><th>Vehicle Type</th></tr><tr><td>PO-556210</td><td>CPS-10044</td><td>Ladies Rib Tank</td><td>318</td><td>Rotterdam</td><td>Trailer</td></tr></table><p>Thanks.</p></body></html>",
+      "expected_table": {
+        "order_no": "PO-556210",
+        "cps_id": "CPS-10044",
+        "style_name": "Ladies Rib Tank",
+        "total_cartons": 318,
+        "final_destination": "Rotterdam",
+        "vehicle_type": "Trailer"
+      },
+      "expected_free_text": {
+        "buyer_name": "NORTH STAR APPARELS LTD",
+        "delivery_date": "2026-09-02",
+        "delivery_warehouse": "Pangaon ICD Warehouse"
+      }
+    },
+    {
+      "id": "di_03_multi_row_table",
+      "source": "invented (multi-row / batched shipment lines)",
+      "has_table": true,
+      "body_html": "<html><body><p>Dear Sir,</p><p>Kindly note the following three lines against buyer <b>KNIT VALLEY LTD</b>. All cartons must be handed over at the <b>Adamjee EPZ Warehouse</b> by 15/09/2026.</p><table><thead><tr><th>Order No</th><th>CPS ID</th><th>Style Name</th><th>Assorted Qty</th><th>Total Cartons</th><th>Final Destination</th></tr></thead><tbody><tr><td>KV-9001</td><td>CPS-22001</td><td>Boys Fleece Hoodie</td><td>8,400</td><td>210</td><td>Felixstowe</td></tr><tr><td>KV-9002</td><td>CPS-22002</td><td>Boys Jogger Pant</td><td>8,400</td><td>195</td><td>Felixstowe</td></tr><tr><td>KV-9003</td><td>CPS-22003</td><td>Boys Zip Jacket</td><td>4,200</td><td>140</td><td>Felixstowe</td></tr></tbody></table></body></html>",
+      "expected_table_rows": [
+        {"order_no": "KV-9001", "cps_id": "CPS-22001", "style_name": "Boys Fleece Hoodie", "assorted_qty": 8400, "total_cartons": 210, "final_destination": "Felixstowe"},
+        {"order_no": "KV-9002", "cps_id": "CPS-22002", "style_name": "Boys Jogger Pant", "assorted_qty": 8400, "total_cartons": 195, "final_destination": "Felixstowe"},
+        {"order_no": "KV-9003", "cps_id": "CPS-22003", "style_name": "Boys Zip Jacket", "assorted_qty": 4200, "total_cartons": 140, "final_destination": "Felixstowe"}
+      ],
+      "expected_table": {
+        "order_no": "KV-9001",
+        "cps_id": "CPS-22001",
+        "style_name": "Boys Fleece Hoodie",
+        "assorted_qty": 8400,
+        "total_cartons": 210,
+        "final_destination": "Felixstowe"
+      },
+      "expected_free_text": {
+        "buyer_name": "KNIT VALLEY LTD",
+        "delivery_date": "2026-09-15",
+        "delivery_warehouse": "Adamjee EPZ Warehouse"
+      }
+    },
+    {
+      "id": "di_04_no_table_prose_only",
+      "source": "invented (NO table at all — pure free text)",
+      "has_table": false,
+      "body_html": "<html><body><p>Dear Coordination Desk,</p><p>This is a delivery instruction for buyer <b>DENIM WORLD PLC</b>. Please arrange for the full consignment to be delivered to our <b>Mongla Warehouse</b> on or before 2026-10-01. Order reference DW-71120, style &quot;Mens Straight Fit Jean&quot;, approximately 275 cartons. Final destination is Antwerp. Detailed line sheet will follow in a separate mail.</p><p>Best regards,<br>Merchandising</p></body></html>",
+      "body_text": "Dear Coordination Desk,\n\nThis is a delivery instruction for buyer DENIM WORLD PLC. Please arrange for the full consignment to be delivered to our Mongla Warehouse on or before 2026-10-01. Order reference DW-71120, style \"Mens Straight Fit Jean\", approximately 275 cartons. Final destination is Antwerp. Detailed line sheet will follow in a separate mail.\n\nBest regards,\nMerchandising",
+      "expected_table": {},
+      "expected_free_text": {
+        "buyer_name": "DENIM WORLD PLC",
+        "delivery_date": "2026-10-01",
+        "delivery_warehouse": "Mongla Warehouse"
+      }
+    },
+    {
+      "id": "di_05_key_value_table",
+      "source": "invented (key-value / label|value table shape)",
+      "has_table": true,
+      "body_html": "<html><body><p>Delivery instruction follows. Buyer: <b>URBAN THREADS BD</b>. Required delivery date: 20 Aug 2026. Deliver to <b>Kamalapur Container Depot</b>.</p><table><tr><td>Order No</td><td>UT-3345</td></tr><tr><td>CPS ID</td><td>CPS-55120</td></tr><tr><td>Special Code</td><td>EXP-2</td></tr><tr><td>Style Name</td><td>Unisex Oversized Tee</td></tr><tr><td>Total Cartons</td><td>512</td></tr><tr><td>Final Destination</td><td>Le Havre</td></tr><tr><td>LC Ref No</td><td>LC-990821</td></tr><tr><td>LC Ref Bank</td><td>BRAC Bank</td></tr></table></body></html>",
+      "expected_table": {
+        "order_no": "UT-3345",
+        "cps_id": "CPS-55120",
+        "special_code": "EXP-2",
+        "style_name": "Unisex Oversized Tee",
+        "total_cartons": "512",
+        "final_destination": "Le Havre",
+        "lc_ref_no": "LC-990821",
+        "lc_ref_bank": "BRAC Bank"
+      },
+      "expected_free_text": {
+        "buyer_name": "URBAN THREADS BD",
+        "delivery_date": "2026-08-20",
+        "delivery_warehouse": "Kamalapur Container Depot"
+      }
+    },
+    {
+      "id": "di_06_messy_headers",
+      "source": "invented (hyphenated / abbreviated column headers)",
+      "has_table": true,
+      "body_html": "<html><body><p>Ref delivery for <b>GREEN LOOM FASHIONS</b> &ndash; goods due at <b>Chittagong Warehouse</b> by 07.09.2026.</p><table><tr><th>Order-No.</th><th>CPS-ID</th><th>Style</th><th>Ctns</th><th>Dest.</th><th>Vehicle</th><th>GTIP</th></tr><tr><td>GL-40021</td><td>CPS-70012</td><td>Girls Printed Legging</td><td>264</td><td>Gdynia</td><td>Covered Van</td><td>6104.63.00.00</td></tr></table></body></html>",
+      "expected_table": {
+        "order_no": "GL-40021",
+        "cps_id": "CPS-70012",
+        "style_name": "Girls Printed Legging",
+        "total_cartons": 264,
+        "final_destination": "Gdynia",
+        "vehicle_type": "Covered Van",
+        "gtip": "6104.63.00.00"
+      },
+      "column_field_map": {
+        "Order No": "order_no",
+        "CPS ID": "cps_id",
+        "Style": "style_name",
+        "Ctns": "total_cartons",
+        "Dest": "final_destination",
+        "Vehicle": "vehicle_type",
+        "GTIP": "gtip"
+      },
+      "expected_free_text": {
+        "buyer_name": "GREEN LOOM FASHIONS",
+        "delivery_date": "2026-09-07",
+        "delivery_warehouse": "Chittagong Warehouse"
+      }
+    },
+    {
+      "id": "di_07_date_written_long_form",
+      "source": "invented (long-form date phrasing)",
+      "has_table": true,
+      "body_html": "<html><body><p>Hello,</p><p>Please treat this as the delivery instruction for <b>SOUTHERN STITCH LTD</b>. The consignment should be delivered to the <b>Dhaka EPZ Warehouse</b> by September 5, 2026 at the latest.</p><table><tr><th>Order No</th><th>CPS ID</th><th>Style Name</th><th>Assorted Qty</th><th>Unassorted Qty</th><th>Total Cartons</th><th>Target Shipment</th></tr><tr><td>SS-11890</td><td>CPS-33410</td><td>Mens Polo Pique</td><td>9,600</td><td>0</td><td>288</td><td>2026-09-22</td></tr></table></body></html>",
+      "expected_table": {
+        "order_no": "SS-11890",
+        "cps_id": "CPS-33410",
+        "style_name": "Mens Polo Pique",
+        "assorted_qty": 9600,
+        "unassorted_qty": 0,
+        "total_cartons": 288,
+        "target_shipment": "2026-09-22"
+      },
+      "expected_free_text": {
+        "buyer_name": "SOUTHERN STITCH LTD",
+        "delivery_date": "2026-09-05",
+        "delivery_warehouse": "Dhaka EPZ Warehouse"
+      }
+    },
+    {
+      "id": "di_08_buyer_in_subject_line_style",
+      "source": "invented (buyer/date/warehouse as explicit labelled lines in prose)",
+      "has_table": true,
+      "body_html": "<html><body><p>Delivery Instruction</p><p>Buyer: <b>CROWN GARMENTS INTL</b><br>Delivery Date: 12-10-2026<br>Delivery Warehouse: Benapole Land Port Warehouse</p><table><tr><th>Order No</th><th>CPS ID</th><th>Style Name</th><th>Total Cartons</th><th>Final Destination</th><th>Shipment Route</th><th>LC Ref No</th></tr><tr><td>CG-6600</td><td>CPS-91002</td><td>Kids Terry Short</td><td>176</td><td>Barcelona</td><td>CTG-BCN direct</td><td>LC-118820</td></tr></table></body></html>",
+      "expected_table": {
+        "order_no": "CG-6600",
+        "cps_id": "CPS-91002",
+        "style_name": "Kids Terry Short",
+        "total_cartons": 176,
+        "final_destination": "Barcelona",
+        "shipment_route": "CTG-BCN direct",
+        "lc_ref_no": "LC-118820"
+      },
+      "expected_free_text": {
+        "buyer_name": "CROWN GARMENTS INTL",
+        "delivery_date": "2026-10-12",
+        "delivery_warehouse": "Benapole Land Port Warehouse"
+      }
+    },
+    {
+      "id": "di_09_full_16col_second_real_style",
+      "source": "invented (full 16-column table, different values)",
+      "has_table": true,
+      "body_html": "<html><body><p>Dear Team,</p><p>Delivery instruction for <b>ABA FASHIONS LTD</b>. Kindly ensure the goods reach the <b>Chittagong Warehouse</b> on 30 August 2026 before 14:00.</p><table><tr><th>Order No</th><th>CPS ID</th><th>Special Code</th><th>Style Name</th><th>Assorted Qty</th><th>Unassorted Qty</th><th>Total Cartons</th><th>Final Destination</th><th>Delivery Place of Vendor</th><th>Target Shipment</th><th>Shipment Route</th><th>LC Ref No</th><th>LC Ref Bank</th><th>Delivery Location</th><th>Vehicle Type</th><th>GTIP</th></tr><tr><td>ORD-2801144</td><td>CPS-88990</td><td>SC-14</td><td>Womens Seamless Legging</td><td>15,750</td><td>2,250</td><td>505</td><td>Genoa</td><td>Chittagong</td><td>W36-2026</td><td>CTG-GOA via Singapore</td><td>LC-5590114</td><td>City Bank</td><td>Chittagong Port</td><td>Trailer 40ft</td><td>6115.21.00.00</td></tr></table></body></html>",
+      "expected_table": {
+        "order_no": "ORD-2801144",
+        "cps_id": "CPS-88990",
+        "special_code": "SC-14",
+        "style_name": "Womens Seamless Legging",
+        "assorted_qty": 15750,
+        "unassorted_qty": 2250,
+        "total_cartons": 505,
+        "final_destination": "Genoa",
+        "delivery_place_of_vendor": "Chittagong",
+        "target_shipment": "W36-2026",
+        "shipment_route": "CTG-GOA via Singapore",
+        "lc_ref_no": "LC-5590114",
+        "lc_ref_bank": "City Bank",
+        "delivery_location": "Chittagong Port",
+        "vehicle_type": "Trailer 40ft",
+        "gtip": "6115.21.00.00"
+      },
+      "expected_free_text": {
+        "buyer_name": "ABA FASHIONS LTD",
+        "delivery_date": "2026-08-30",
+        "delivery_warehouse": "Chittagong Warehouse"
+      }
+    },
+    {
+      "id": "di_10_no_table_slash_date",
+      "source": "invented (no table, DD/MM/YYYY date, warehouse mid-sentence)",
+      "has_table": false,
+      "body_html": "<html><body><p>Please arrange delivery of order LT-2245 for <b>LOTUS TEXTILE MILLS</b>. Everything should be delivered into the <b>Kamalapur ICD Warehouse</b> not later than 18/09/2026. Roughly 190 cartons, style Mens Henley Long Sleeve, final destination Hamburg.</p></body></html>",
+      "body_text": "Please arrange delivery of order LT-2245 for LOTUS TEXTILE MILLS. Everything should be delivered into the Kamalapur ICD Warehouse not later than 18/09/2026. Roughly 190 cartons, style Mens Henley Long Sleeve, final destination Hamburg.",
+      "expected_table": {},
+      "expected_free_text": {
+        "buyer_name": "LOTUS TEXTILE MILLS",
+        "delivery_date": "2026-09-18",
+        "delivery_warehouse": "Kamalapur ICD Warehouse"
+      }
+    },
+    {
+      "id": "di_11_two_row_table_same_buyer",
+      "source": "invented (2-row table)",
+      "has_table": true,
+      "body_html": "<html><body><p>Delivery note for <b>MERIDIAN KNITWEAR</b>. Hand over at <b>Pangaon ICD Warehouse</b> by 2026-09-28.</p><table><tr><th>Order No</th><th>CPS ID</th><th>Style Name</th><th>Total Cartons</th><th>Final Destination</th><th>Delivery Location</th></tr><tr><td>MK-701</td><td>CPS-44100</td><td>Mens Base Layer Top</td><td>230</td><td>Southampton</td><td>Pangaon ICD</td></tr><tr><td>MK-702</td><td>CPS-44101</td><td>Mens Base Layer Bottom</td><td>225</td><td>Southampton</td><td>Pangaon ICD</td></tr></table></body></html>",
+      "expected_table_rows": [
+        {"order_no": "MK-701", "cps_id": "CPS-44100", "style_name": "Mens Base Layer Top", "total_cartons": 230, "final_destination": "Southampton", "delivery_location": "Pangaon ICD"},
+        {"order_no": "MK-702", "cps_id": "CPS-44101", "style_name": "Mens Base Layer Bottom", "total_cartons": 225, "final_destination": "Southampton", "delivery_location": "Pangaon ICD"}
+      ],
+      "expected_table": {
+        "order_no": "MK-701",
+        "cps_id": "CPS-44100",
+        "style_name": "Mens Base Layer Top",
+        "total_cartons": 230,
+        "final_destination": "Southampton",
+        "delivery_location": "Pangaon ICD"
+      },
+      "expected_free_text": {
+        "buyer_name": "MERIDIAN KNITWEAR",
+        "delivery_date": "2026-09-28",
+        "delivery_warehouse": "Pangaon ICD Warehouse"
+      }
+    },
+    {
+      "id": "di_12_warehouse_first_then_date",
+      "source": "invented (warehouse named before date, ISO datetime in free text)",
+      "has_table": true,
+      "body_html": "<html><body><p>To Logistics,</p><p>Consignment for <b>HORIZON APPAREL CO</b> must be delivered to the <b>Chittagong Warehouse</b>; delivery must be completed by 2026-08-26T10:00 local time.</p><table><tr><th>Order No</th><th>CPS ID</th><th>Style Name</th><th>Assorted Qty</th><th>Total Cartons</th><th>Final Destination</th><th>GTIP</th></tr><tr><td>HA-8080</td><td>CPS-60500</td><td>Womens Wrap Dress</td><td>6,300</td><td>178</td><td>Marseille</td><td>6204.43.00.00</td></tr></table></body></html>",
+      "expected_table": {
+        "order_no": "HA-8080",
+        "cps_id": "CPS-60500",
+        "style_name": "Womens Wrap Dress",
+        "assorted_qty": 6300,
+        "total_cartons": 178,
+        "final_destination": "Marseille",
+        "gtip": "6204.43.00.00"
+      },
+      "expected_free_text": {
+        "buyer_name": "HORIZON APPAREL CO",
+        "delivery_date": "2026-08-26",
+        "delivery_warehouse": "Chittagong Warehouse"
+      }
+    },
+    {
+      "id": "di_13_no_table_buyer_only_in_greeting",
+      "source": "invented (no table, buyer only in the salutation)",
+      "has_table": false,
+      "body_html": "<html><body><p>Dear ABA FASHIONS LTD team,</p><p>As agreed on the call, we will deliver the pending cartons to your <b>Chittagong Warehouse</b>. Target delivery is 05.09.2026. Line-level details are attached as a spreadsheet.</p><p>Regards,<br>Vendor Ops</p></body></html>",
+      "body_text": "Dear ABA FASHIONS LTD team,\n\nAs agreed on the call, we will deliver the pending cartons to your Chittagong Warehouse. Target delivery is 05.09.2026. Line-level details are attached as a spreadsheet.\n\nRegards,\nVendor Ops",
+      "expected_table": {},
+      "expected_free_text": {
+        "buyer_name": "ABA FASHIONS LTD",
+        "delivery_date": "2026-09-05",
+        "delivery_warehouse": "Chittagong Warehouse"
+      }
+    }
+  ]
 }
-  }
-]

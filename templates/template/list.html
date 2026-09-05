@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Templates · Mail2Record{% endblock %}
 {% block page_title %}Templates{% endblock %}
 
@@ -27,9 +28,12 @@
         <article class="panel template-card">
             <div class="template-card-head">
                 <div class="template-token token-amber">{{ t.name|slice:":3"|upper }}</div>
-                <span class="status-pill {% if t.is_active %}status-approved{% else %}status-rejected{% endif %}">
-                    {% if t.is_active %}Active{% else %}Inactive{% endif %}
-                </span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    {% if t.is_default %}<span class="status-pill status-review">★ Default</span>{% endif %}
+                    <span class="status-pill {% if t.is_active %}status-approved{% else %}status-rejected{% endif %}">
+                        {% if t.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
             </div>
             <h2>{{ t.name }}</h2>
             <p>{{ t.description|default:"No description yet." }}</p>
@@ -38,7 +42,27 @@
             </div>
             <div class="template-card-foot">
                 <span>{{ t.fields.count }} fields · v{{ t.version }}</span>
-                <a class="text-button" href="{% url 'templates_ui:edit' t.pk %}">Edit template →</a>
+                <div class="template-card-actions">
+                    {% if t.is_default %}
+                        <button type="button" class="text-button template-unset-default-btn" data-id="{{ t.pk }}">★ Default · unset</button>
+                    {% elif t.is_active %}
+                        <button type="button" class="text-button template-default-btn" data-id="{{ t.pk }}" data-name="{{ t.name|escapejs }}">☆ Set default</button>
+                    {% endif %}
+                    <a class="text-button" href="{% url 'templates_ui:edit' t.pk %}">Edit template →</a>
+                    <button
+                        type="button"
+                        class="icon-button template-delete-btn"
+                        data-id="{{ t.pk }}"
+                        data-name="{{ t.name|escapejs }}"
+                        aria-label="Delete template"
+                        title="Delete template"
+                    >
+                        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2.5 4h11M6 4V2.6c0-.33.27-.6.6-.6h2.8c.33 0 .6.27.6.6V4M5.5 4l.5 9.2c.02.44.39.8.83.8h3.34c.44 0 .81-.36.83-.8L11.5 4"/>
+                            <path d="M6.5 6.8v4.4M9.5 6.8v4.4"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </article>
         {% empty %}
@@ -46,4 +70,8 @@
         {% endfor %}
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/template/list.js' %}"></script>
 {% endblock %}

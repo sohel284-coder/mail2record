@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.files.base import ContentFile
+from django.core.management.base import BaseCommand, CommandError
 
 from apps.emails.gmail_client import fetch_new_messages, get_gmail_service
-from apps.emails.models import Email
+from apps.emails.models import Attachment, Email
 
 
 class Command(BaseCommand):
@@ -12,20 +13,23 @@ class Command(BaseCommand):
         parser.add_argument(
             "--user",
             type=str,
-            help="Username to associate fetched emails with (defaults to first superuser).",
+            required=True,
+            help="Username to associate fetched emails with, e.g. --user admin.",
         )
         parser.add_argument("--max-results", type=int, default=25)
 
     def handle(self, *args, **options):
         User = get_user_model()
-        if options["user"]:
-            user = User.objects.get(username=options["user"])
-        else:
-            user = User.objects.filter(is_superuser=True).first()
-
-        if not user:
-            self.stderr.write("No user found to associate emails with.")
-            return
+        username = options["user"]
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            available = ", ".join(
+                User.objects.filter(is_active=True).values_list("username", flat=True)
+            ) or "(none)"
+            raise CommandError(f'No user named "{username}". Available: {available}')
+        if not user.is_active:
+            raise CommandError(f'User "{username}" is inactive.')
 
         self.stdout.write("Connecting to Gmail…")
         service = get_gmail_service()
@@ -36,8 +40,10 @@ class Command(BaseCommand):
         created_count = 0
         skipped_count = 0
 
+        attachment_count = 0
+
         for msg_data in messages:
-            _, created = Email.objects.get_or_create(
+            email, created = Email.objects.get_or_create(
                 message_id=msg_data["message_id"],
                 defaults={
                     "user": user,
@@ -52,11 +58,21 @@ class Command(BaseCommand):
             )
             if created:
                 created_count += 1
+                for att in msg_data.get("attachments", []):
+                    Attachment.objects.create(
+                        email=email,
+                        filename=att["filename"],
+                        content_type=att["content_type"],
+                        size=att["size"],
+                        file=ContentFile(att["content"], name=att["filename"]),
+                    )
+                    attachment_count += 1
             else:
                 skipped_count += 1
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Done. {created_count} new email(s) saved, {skipped_count} duplicate(s) skipped."
+                f"Done. {created_count} new email(s) saved ({attachment_count} attachment(s)), "
+                f"{skipped_count} duplicate(s) skipped."
             )
         )

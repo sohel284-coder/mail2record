@@ -5,6 +5,7 @@ import os
 from email.utils import parsedate_to_datetime
 
 from django.conf import settings
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -29,10 +30,19 @@ def get_gmail_service():
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except RefreshError:
+                # Refresh token was expired or revoked (e.g. a Google Cloud
+                # OAuth app still in "Testing" mode expires refresh tokens
+                # after 7 days). It can't be revived — the stale token is
+                # discarded and the code below re-runs the full consent flow.
+                creds = None
+
+        if not creds or not creds.valid:
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
             creds = flow.run_local_server(port=0)
+
         with open(TOKEN_FILE, "w") as token:
             token.write(creds.to_json())
 
@@ -42,7 +52,9 @@ def get_gmail_service():
 def fetch_new_messages(service, max_results=25):
     """
     Fetches recent messages from the inbox. Returns a list of dicts with
-    the fields our Email model needs. Caller is responsible for dedup.
+    the fields our Email model needs, including a resolved ``attachments``
+    list (filename / content_type / size / content bytes). Caller is
+    responsible for dedup.
     """
     results = service.users().messages().list(
         userId="me", maxResults=max_results, labelIds=["INBOX"]
@@ -54,14 +66,15 @@ def fetch_new_messages(service, max_results=25):
         msg = service.users().messages().get(
             userId="me", id=stub["id"], format="full"
         ).execute()
-        parsed_messages.append(_parse_message(msg))
+        parsed_messages.append(_parse_message(service, msg))
     return parsed_messages
 
 
-def _parse_message(msg):
+def _parse_message(service, msg):
     headers = {h["name"].lower(): h["value"] for h in msg["payload"].get("headers", [])}
 
-    body_text, body_html = _extract_bodies(msg["payload"])
+    body_text, body_html, attachment_parts = _extract_bodies_and_attachments(msg["payload"])
+    attachments = _resolve_attachments(service, msg["id"], attachment_parts)
 
     received_at = None
     if "date" in headers:
@@ -79,19 +92,36 @@ def _parse_message(msg):
         "body_html": body_html,
         "received_at": received_at,
         "source": "gmail",
+        "attachments": attachments,
     }
 
 
-def _extract_bodies(payload):
+def _extract_bodies_and_attachments(payload):
     body_text, body_html = "", ""
+    attachment_parts = []
 
     def walk(part):
         nonlocal body_text, body_html
         mime_type = part.get("mimeType", "")
-        data = part.get("body", {}).get("data")
+        body = part.get("body", {})
+        filename = part.get("filename", "")
 
-        if data:
-            decoded = base64.urlsafe_b64decode(data.encode("UTF-8")).decode("utf-8", errors="replace")
+        if filename:
+            # A real attachment (or inline image) — filename is only ever set
+            # on parts Gmail considers a file, never on the text/html body parts.
+            attachment_parts.append(
+                {
+                    "filename": filename,
+                    "content_type": mime_type,
+                    "attachment_id": body.get("attachmentId"),
+                    "inline_data": body.get("data"),  # small attachments only
+                    "size": body.get("size", 0),
+                }
+            )
+        elif body.get("data"):
+            decoded = base64.urlsafe_b64decode(body["data"].encode("UTF-8")).decode(
+                "utf-8", errors="replace"
+            )
             if mime_type == "text/plain":
                 body_text += decoded
             elif mime_type == "text/html":
@@ -101,4 +131,34 @@ def _extract_bodies(payload):
             walk(sub_part)
 
     walk(payload)
-    return body_text, body_html
+    return body_text, body_html, attachment_parts
+
+
+def _resolve_attachments(service, message_id, attachment_parts):
+    """Download each attachment's bytes (small ones already arrived inline;
+    larger ones need a separate Gmail API call keyed by attachmentId)."""
+    attachments = []
+    for part in attachment_parts:
+        data = part["inline_data"]
+        if not data and part["attachment_id"]:
+            fetched = (
+                service.users()
+                .messages()
+                .attachments()
+                .get(userId="me", messageId=message_id, id=part["attachment_id"])
+                .execute()
+            )
+            data = fetched.get("data")
+        if not data:
+            continue
+
+        content = base64.urlsafe_b64decode(data.encode("UTF-8"))
+        attachments.append(
+            {
+                "filename": part["filename"],
+                "content_type": part["content_type"],
+                "size": part["size"] or len(content),
+                "content": content,
+            }
+        )
+    return attachments

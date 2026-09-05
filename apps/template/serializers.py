@@ -30,11 +30,14 @@ class TemplateSerializer(serializers.ModelSerializer):
             "source_file",
             "version",
             "is_active",
+            "is_default",
             "created_at",
             "updated_at",
             "fields",
         ]
-        read_only_fields = ["version", "created_at", "updated_at"]
+        # is_default is only ever changed via the dedicated /set-default/ action
+        # so a plain save from the edit form can't accidentally clear it.
+        read_only_fields = ["version", "is_default", "created_at", "updated_at"]
 
     def validate_fields(self, value):
         if not value:

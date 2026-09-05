@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Review queue · Mail2Record{% endblock %}
+{% block page_title %}Review queue{% endblock %}
+
+{% block content %}
+<section id="page-review-queue">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">HUMAN IN THE LOOP</span>
+            <h1>Review queue</h1>
+            <p>Every draft waits here for a person to confirm before it becomes a record.</p>
+        </div>
+        <div class="queue-count"><strong>{{ draft_count }}</strong><span>drafts<br>waiting</span></div>
+    </div>
+
+    <div class="panel table-panel">
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Sender</th>
+                        <th>Template</th>
+                        <th>Confidence</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in drafts %}
+                    <tr>
+                        <td><strong>{{ d.email.subject|default:"(no subject)" }}</strong></td>
+                        <td>{{ d.email.sender|default:"—" }}</td>
+                        <td>{{ d.template.name }}</td>
+                        <td>{{ d.extraction.confidence|default:"—" }}</td>
+                        <td>{{ d.created_at|timesince }} ago</td>
+                        <td><a class="row-action" href="{% url 'records_ui:review_detail' d.pk %}">Review →</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="hint">Nothing waiting. Run extraction on an email from the inbox to create a draft.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="table-foot"><span>Showing {{ draft_count }} draft{{ draft_count|pluralize }}</span></div>
+    </div>
+</section>
+{% endblock %}

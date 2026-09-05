@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ email.subject|default:"Email" }} · Mail2Record{% endblock %}
+{% block page_title %}Email{% endblock %}
+
+{% block content %}
+<section id="page-email-detail">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">ORIGINAL EMAIL · PRESERVED</span>
+            <h1>{{ email.subject|default:"(no subject)" }}</h1>
+            <p>{{ email.sender }} · {{ email.received_at|date:"d M Y H:i"|default:"unknown date" }}</p>
+        </div>
+        <div class="review-actions">
+            {% if record %}
+                <a class="button button-primary" href="{% if record.status == 'DRAFT' %}{% url 'records_ui:review_detail' record.pk %}{% else %}{% url 'records_ui:detail' record.pk %}{% endif %}">
+                    {% if record.status == 'DRAFT' %}Review draft →{% else %}View record →{% endif %}
+                </a>
+            {% endif %}
+            <a class="button button-ghost" href="{% url 'emails_ui:inbox' %}">← Inbox</a>
+        </div>
+    </div>
+
+    <article class="panel source-panel">
+        <div class="email-meta">
+            <div><span>From</span><strong>{{ email.sender|default:"—" }}</strong></div>
+            <div><span>To</span><strong>{{ email.recipient|default:"—" }}</strong></div>
+            <div><span>Message ID</span><strong>{{ email.message_id }}</strong></div>
+        </div>
+
+        {% if email.body_html %}
+        <p class="hint" style="margin-top:20px">Rendered HTML (sandboxed):</p>
+        <iframe title="Email HTML" sandbox="" referrerpolicy="no-referrer"
+                style="width:100%;min-height:520px;border:1px solid var(--rule);border-radius:4px;background:#fff"
+                srcdoc="{{ email.body_html }}"></iframe>
+        {% endif %}
+
+        {% if email.body_text %}
+        <p class="hint" style="margin-top:20px">Plain text:</p>
+        <div class="email-body">{{ email.body_text|linebreaks }}</div>
+        {% elif not email.body_html %}
+        <div class="email-body hint">This email has no stored body.</div>
+        {% endif %}
+
+        {% if email.attachments.all %}
+        <p class="hint" style="margin-top:20px">Attachments ({{ email.attachments.count }}):</p>
+        <div class="template-fields" style="margin-top:8px;">
+            {% for att in email.attachments.all %}
+            <a href="{{ att.file.url }}" target="_blank" rel="noopener"
+               style="text-decoration:none;color:inherit;">
+                {{ att.filename }} ({{ att.kind }})
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

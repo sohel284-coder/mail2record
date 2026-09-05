@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Record #{{ record.pk }} · Mail2Record{% endblock %}
+{% block page_title %}Record #{{ record.pk }}{% endblock %}
+
+{% block content %}
+<section id="page-record-detail">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">RECORD · {{ record.get_status_display|upper }}</span>
+            <h1>{{ record.email.subject|default:"(no subject)" }}</h1>
+            <p>
+                {{ record.template.name }} ·
+                {% if record.approved_by %}approved by {{ record.approved_by.username }} {{ record.approved_at|date:"d M Y H:i" }}{% else %}not approved{% endif %}
+            </p>
+        </div>
+        <div class="review-actions">
+            {% if record.status == 'DRAFT' %}
+            <a class="button button-primary" href="{% url 'records_ui:review_detail' record.pk %}">Review draft →</a>
+            {% endif %}
+            <a class="button button-ghost" href="{% url 'records_ui:list' %}">← All records</a>
+        </div>
+    </div>
+
+    <div class="review-layout">
+        <article class="panel source-panel">
+            <div class="panel-head"><div><span class="eyebrow">ORIGINAL EMAIL</span><h2>Source</h2></div>
+                <a class="text-button" href="{% url 'emails_ui:detail' record.email.pk %}" target="_blank">Open original ↗</a>
+            </div>
+            <div class="email-meta">
+                <div><span>From</span><strong>{{ record.email.sender|default:"—" }}</strong></div>
+                <div><span>Received</span><strong>{{ record.email.received_at|date:"d M Y H:i"|default:"—" }}</strong></div>
+                <div><span>Message ID</span><strong>{{ record.email.message_id|truncatechars:26 }}</strong></div>
+            </div>
+            <div class="email-body">
+                {% if record.email.body_text %}{{ record.email.body_text|linebreaks }}
+                {% elif record.email.body_html %}
+                <iframe title="Email HTML" sandbox="" referrerpolicy="no-referrer"
+                        style="width:100%;min-height:420px;border:1px solid var(--rule);border-radius:4px;background:#fff"
+                        srcdoc="{{ record.email.body_html }}"></iframe>
+                {% else %}<span class="hint">No stored body.</span>{% endif %}
+            </div>
+        </article>
+
+        <article class="panel extraction-panel">
+            <div class="panel-head"><div><span class="eyebrow">RECORD DATA</span><h2>Stored values</h2></div></div>
+            <div class="extraction-form">
+                {% for f in fields %}
+                <label>
+                    {{ f.label }}
+                    {% if f.required %}<span class="required">Required</span>{% else %}<span class="optional">Optional</span>{% endif %}
+                    <input type="text" value="{{ f.value }}" disabled>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="extraction-foot">
+                <span>Record #{{ record.pk }} · {{ record.extraction.confidence|default:"" }}</span>
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}

@@ -1,6 +1,13 @@
 """
-Phase 4 Stage A: AI Extraction Spike.
-Standalone script — NOT part of the Django app yet. Run directly with:
+Phase 4 Stage A: AI Extraction Spike (historical).
+
+This was the first raw prompt-to-model probe. The finalised evaluation that
+exercises the ACTUAL pipeline code (html_parser + free_text_extractor) and
+reports table / free-text / overall accuracy separately is:
+
+    uv run python spike/run_full_pipeline_eval.py
+
+Standalone script — NOT part of the Django app. Run directly with:
     uv run python spike/run_spike.py
 """
 

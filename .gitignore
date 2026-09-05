@@ -40,3 +40,5 @@ htmlcov/
 .DS_Store
 
 /credentials
+
+.claude

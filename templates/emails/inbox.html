@@ -4,7 +4,10 @@
 {% block page_title %}Inbox{% endblock %}
 
 {% block content %}
-<section id="page-inbox">
+<section id="page-inbox"
+         data-default-template-id="{{ default_template.id|default_if_none:'' }}"
+         data-default-template-name="{{ default_template.name|default:'' }}"
+         data-default-is-fallback="{{ default_is_fallback|yesno:'1,0' }}">
     <div class="page-intro page-intro-compact">
         <div>
             <span class="eyebrow">EMAIL COLLECTION</span>
@@ -12,6 +15,29 @@
             <p>Original emails stay preserved as the source of truth for every record.</p>
         </div>
         <button id="sync-now-2" class="button button-outline"><span class="sync-glyph">↻</span> Sync mailbox</button>
+    </div>
+
+    {% if not templates %}
+    <div class="review-banner is-warning">
+        <span class="banner-mark">!</span>
+        <span>No active templates yet. <a href="{% url 'templates_ui:create' %}">Create one</a> before running extraction.</span>
+    </div>
+    {% elif default_is_fallback %}
+    <div class="review-banner is-warning">
+        <span class="banner-mark">!</span>
+        <span>No default template set — using "{{ default_template.name }}" for now. Pick a default on the
+            <a href="{% url 'templates_ui:list' %}">Templates page</a> to skip this notice.</span>
+    </div>
+    {% endif %}
+
+    <div id="batch-bar" class="review-banner" style="display:none;">
+        <span class="banner-mark">☑</span>
+        <span id="batch-bar-text">0 selected</span>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+            <button type="button" id="batch-delete-btn" class="button button-danger">Delete selected</button>
+            <button type="button" id="batch-clear-btn" class="button button-ghost">Clear selection</button>
+            <button type="button" id="batch-open-btn" class="button button-primary">Extract selected →</button>
+        </div>
     </div>
 
     <div class="panel table-panel">
@@ -23,7 +49,7 @@
             <div class="toolbar-controls">
                 <select id="inbox-status" aria-label="Filter inbox status">
                     <option value="">All statuses</option>
-                    <option value="false">Draft</option>
+                    <option value="false" selected>Unprocessed</option>
                     <option value="true">Processed</option>
                 </select>
                 <button id="clear-filters" class="button button-ghost">Clear filters</button>
@@ -33,6 +59,7 @@
             <table id="inbox-table">
                 <thead>
                     <tr>
+                        <th><input type="checkbox" id="inbox-select-all" aria-label="Select all unprocessed"></th>
                         <th>Sender</th>
                         <th>Subject</th>
                         <th>Received</th>
@@ -41,15 +68,82 @@
                     </tr>
                 </thead>
                 <tbody id="inbox-tbody">
-                    <tr><td colspan="5" class="hint">Loading…</td></tr>
+                    <tr><td colspan="6" class="hint">Loading…</td></tr>
                 </tbody>
             </table>
         </div>
         <div class="table-foot">
             <span id="inbox-count">Showing 0 of 0 emails</span>
+            <span class="hint">Extraction runs locally and takes ~20s per email. Select multiple rows to batch up to 10 at once.</span>
         </div>
     </div>
 </section>
+
+<div id="extract-modal" class="modal-overlay">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="extract-modal-title">
+        <h2 id="extract-modal-title">Run AI extraction?</h2>
+        <p id="extract-modal-copy"></p>
+
+        <label style="display:block;margin-top:18px;">
+            <span class="hint" style="text-transform:uppercase;letter-spacing:.1em;">Template to use</span>
+            <select id="extract-modal-template" style="width:100%;margin-top:7px;min-height:38px;border:1px solid var(--rule);border-radius:3px;padding:0 10px;color:var(--ink-soft);background:var(--surface);font:11px var(--mono);">
+                {% for t in templates %}
+                <option value="{{ t.id }}" {% if t.id == default_template.id %}selected{% endif %}>
+                    {{ t.name }}{% if t.id == default_template.id %} (default){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label id="extract-modal-source-row" style="display:none;margin-top:14px;">
+            <span class="hint" style="text-transform:uppercase;letter-spacing:.1em;">Extract from</span>
+            <select id="extract-modal-source" style="width:100%;margin-top:7px;min-height:38px;border:1px solid var(--rule);border-radius:3px;padding:0 10px;color:var(--ink-soft);background:var(--surface);font:11px var(--mono);">
+                <option value="">Email body</option>
+            </select>
+            <small class="hint" style="display:block;margin-top:6px;">
+                This email has attachments. Only the file you pick here is ever read — the rest are left untouched.
+            </small>
+        </label>
+
+        <div class="modal-actions">
+            <button type="button" id="extract-modal-cancel" class="button button-ghost">Cancel</button>
+            <button type="button" id="extract-modal-confirm" class="button button-primary">Run extraction →</button>
+        </div>
+    </div>
+</div>
+
+<div id="batch-extract-modal" class="modal-overlay">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="batch-modal-title" style="max-width:620px;">
+        <h2 id="batch-modal-title">Batch extraction</h2>
+        <p id="batch-modal-copy"></p>
+
+        <label style="display:block;margin-top:16px;">
+            <span class="hint" style="text-transform:uppercase;letter-spacing:.1em;">Template for this batch</span>
+            <select id="batch-modal-template" style="width:100%;margin-top:7px;min-height:38px;border:1px solid var(--rule);border-radius:3px;padding:0 10px;color:var(--ink-soft);background:var(--surface);font:11px var(--mono);">
+                {% for t in templates %}
+                <option value="{{ t.id }}" {% if t.id == default_template.id %}selected{% endif %}>
+                    {{ t.name }}{% if t.id == default_template.id %} (default){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <div id="batch-modal-progress-row" style="display:none;margin-top:16px;">
+            <div class="mini-progress-track"><span id="batch-modal-progress-fill" class="mini-progress-fill"></span></div>
+        </div>
+
+        <div id="batch-modal-list" style="margin-top:16px;max-height:300px;overflow-y:auto;border:1px solid var(--rule);border-radius:4px;"></div>
+
+        <p id="batch-modal-summary" class="hint" style="margin-top:12px;"></p>
+
+        <div class="modal-actions">
+            <button type="button" id="batch-modal-cancel" class="button button-ghost">Cancel</button>
+            <button type="button" id="batch-modal-stop" class="button button-danger" style="display:none;">Stop</button>
+            <button type="button" id="batch-modal-done" class="button button-primary" style="display:none;">Go to review queue →</button>
+            <button type="button" id="batch-modal-run" class="button button-primary">Run extraction →</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

@@ -25,7 +25,7 @@
         <label for="tpl-file">Upload CSV or Excel to detect columns</label>
         <input type="file" id="tpl-file" accept=".csv,.xlsx,.xls">
         <div class="form-panel-actions">
-            <button type="button" id="detect-btn" class="button button-outline">Detect columns</button>
+            <button type="button" id="detect-btn" class="button button-detect">Detect columns</button>
             <span id="detect-status" class="hint"></span>
         </div>
         <p class="hint">Source file: <span id="source-file-label">—</span></p>
@@ -57,7 +57,7 @@
     </div>
 
     <div class="form-actions">
-        <button type="button" id="save-btn" class="button button-primary">Save template <span>↗</span></button>
+        <button type="button" id="save-btn" class="button button-primary">{% if template_id %}Update template{% else %}Save template{% endif %} <span>↗</span></button>
         <a href="{% url 'templates_ui:list' %}" class="button button-ghost">Cancel</a>
         <span id="save-status" class="hint"></span>
     </div>

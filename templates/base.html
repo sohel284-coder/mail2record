@@ -21,6 +21,18 @@
         <span class="toast-copy">Saved</span>
     </div>
 
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-message">
+            <div id="confirm-modal-mark" class="modal-mark">!</div>
+            <h2 id="confirm-modal-title">Are you sure?</h2>
+            <p id="confirm-modal-message"></p>
+            <div class="modal-actions">
+                <button type="button" id="confirm-modal-cancel" class="button button-ghost">Cancel</button>
+                <button type="button" id="confirm-modal-ok" class="button button-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     {% if user.is_authenticated %}
     <div class="app-shell">
         <aside id="mobile-sidebar" class="app-rail">
@@ -35,25 +47,25 @@
                 </div>
 
                 <div class="rail-section-label">Workspace</div>
-{#                <nav class="rail-nav" aria-label="Primary navigation">#}
-{#                    <a class="rail-link {% if active_page == 'overview' %}is-current{% endif %}" href="{% url 'dashboard:index' %}">#}
-{#                        <span class="nav-icon">◌</span><span>Overview</span><span class="nav-shortcut">01</span>#}
-{#                    </a>#}
+                <nav class="rail-nav" aria-label="Primary navigation">
+                    <a class="rail-link {% if active_page == 'overview' %}is-current{% endif %}" href="{% url 'dashboard:index' %}">
+                        <span class="nav-icon">◌</span><span>Overview</span><span class="nav-shortcut">01</span>
+                    </a>
                     <a class="rail-link {% if active_page == 'inbox' %}is-current{% endif %}" href="{% url 'emails_ui:inbox' %}">
                         <span class="nav-icon">⌁</span><span>Inbox</span>
                         {% if inbox_draft_count %}<span class="nav-count">{{ inbox_draft_count }}</span>{% endif %}
                     </a>
-{#                    <a class="rail-link {% if active_page == 'templates' %}is-current{% endif %}" href="{% url 'templates_ui:list' %}">#}
-{#                        <span class="nav-icon">▤</span><span>Templates</span><span class="nav-shortcut">03</span>#}
-{#                    </a>#}
-{#                    <a class="rail-link {% if active_page == 'review' %}is-current{% endif %}" href="{% url 'records_ui:review_queue' %}">#}
-{#                        <span class="nav-icon">◎</span><span>Review queue</span>#}
-{#                        {% if review_draft_count %}<span class="nav-count nav-count-amber">{{ review_draft_count }}</span>{% endif %}#}
-{#                    </a>#}
-{#                    <a class="rail-link {% if active_page == 'records' %}is-current{% endif %}" href="{% url 'records_ui:list' %}">#}
-{#                        <span class="nav-icon">▥</span><span>Records</span><span class="nav-shortcut">05</span>#}
-{#                    </a>#}
-{#                </nav>#}
+                    <a class="rail-link {% if active_page == 'templates' %}is-current{% endif %}" href="{% url 'templates_ui:list' %}">
+                        <span class="nav-icon">▤</span><span>Templates</span><span class="nav-shortcut">03</span>
+                    </a>
+                    <a class="rail-link {% if active_page == 'review' %}is-current{% endif %}" href="{% url 'records_ui:review_queue' %}">
+                        <span class="nav-icon">◎</span><span>Review queue</span>
+                        {% if review_draft_count %}<span class="nav-count nav-count-amber">{{ review_draft_count }}</span>{% endif %}
+                    </a>
+                    <a class="rail-link {% if active_page == 'records' %}is-current{% endif %}" href="{% url 'records_ui:list' %}">
+                        <span class="nav-icon">▥</span><span>Records</span><span class="nav-shortcut">05</span>
+                    </a>
+                </nav>
 
                 <div class="rail-section-label rail-section-spaced">System</div>
                 <nav class="rail-nav" aria-label="System navigation">

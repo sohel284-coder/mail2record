@@ -1,7 +1,7 @@
 (function ($) {
     "use strict";
 
-    const $app = $("#template-app");
+    const $app = $("#page-template-form");
     const templateId = $app.data("template-id");
     const rowTemplate = $("#field-row-template").html();
 

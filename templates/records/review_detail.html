@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Review · {{ record.email.subject|default:"draft" }} · Mail2Record{% endblock %}
+{% block page_title %}Draft review{% endblock %}
+
+{% block content %}
+<section id="page-review-detail" data-record-id="{{ record.pk }}">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">DRAFT REVIEW</span>
+            <h1>{{ record.email.subject|default:"(no subject)" }}</h1>
+            <p>Compare the original email with the extracted fields. Edit anything the model got wrong, then approve.</p>
+        </div>
+        <a href="{% url 'records_ui:review_queue' %}" class="button button-ghost">← Back to queue</a>
+    </div>
+
+    <div id="review-banner" class="review-banner {% if not record.extraction or record.extraction.error_message %}is-warning{% endif %}">
+        <span class="banner-mark">{% if record.extraction and not record.extraction.error_message %}✓{% else %}!{% endif %}</span>
+        <span id="review-banner-copy">
+            {% if record.status != 'DRAFT' %}
+                This record is {{ record.get_status_display|lower }}.
+            {% elif record.extraction %}
+                {{ record.extraction.confidence|default:"Extraction complete" }}
+                {% if record.extraction.error_message %} · {{ record.extraction.error_message }}{% endif %}
+            {% else %}
+                Manually created draft — no extraction attached.
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="review-layout">
+        <article class="panel source-panel">
+            <div class="panel-head">
+                <div><span class="eyebrow">ORIGINAL EMAIL</span><h2>Source of truth</h2></div>
+                <a class="text-button" href="{% url 'emails_ui:detail' record.email.pk %}" target="_blank">Open original ↗</a>
+            </div>
+            <div class="email-meta">
+                <div><span>From</span><strong>{{ record.email.sender|default:"—" }}</strong></div>
+                <div><span>Received</span><strong>{{ record.email.received_at|date:"d M Y H:i"|default:"—" }}</strong></div>
+                <div><span>Message ID</span><strong>{{ record.email.message_id|truncatechars:26 }}</strong></div>
+            </div>
+            <div class="email-body">
+                {% if record.email.body_text %}
+                    {{ record.email.body_text|linebreaks }}
+                {% elif record.email.body_html %}
+                    <iframe title="Email HTML" sandbox="" referrerpolicy="no-referrer"
+                            style="width:100%;min-height:460px;border:1px solid var(--rule);border-radius:4px;background:#fff"
+                            srcdoc="{{ record.email.body_html }}"></iframe>
+                {% else %}
+                    <span class="hint">This email has no stored body.</span>
+                {% endif %}
+            </div>
+            <div class="email-foot">
+                <span>Original preserved · never overwritten (SRS §17)</span>
+                <span>Template · {{ record.template.name }}</span>
+            </div>
+        </article>
+
+        <article class="panel extraction-panel">
+            <div class="panel-head">
+                <div><span class="eyebrow">EXTRACTED FIELDS</span><h2>Review &amp; edit</h2></div>
+            </div>
+
+            <div id="validation-note" class="validation-note">
+                <span>✓</span>
+                <span id="validation-copy">Checking required fields…</span>
+            </div>
+
+            <form id="extraction-form" class="extraction-form">
+                {% for f in fields %}
+                <label data-field="{{ f.name }}">
+                    {{ f.label }}
+                    {% if f.required %}<span class="required">Required</span>{% else %}<span class="optional">Optional</span>{% endif %}
+                    <input
+                        type="{{ f.input_type }}"
+                        name="{{ f.name }}"
+                        value="{{ f.value }}"
+                        data-type="{{ f.data_type }}"
+                        {% if f.is_free_text %}data-free-text="1"{% endif %}
+                        {% if record.status != 'DRAFT' %}disabled{% endif %}>
+                    <small class="hint">
+                        {{ f.name }} · {{ f.data_type }}{% if f.is_free_text %} · from free text (AI){% else %} · from table{% endif %}
+                        {% if f.ai_instruction %} — {{ f.ai_instruction }}{% endif %}
+                    </small>
+                </label>
+                {% endfor %}
+            </form>
+
+            <div class="extraction-foot">
+                <span>Draft #{{ record.pk }} · created {{ record.created_at|timesince }} ago<br>
+                <b id="save-state">No unsaved changes</b></span>
+                {% if record.status == 'DRAFT' %}
+                <div class="review-actions">
+                    <button type="button" id="reject-btn" class="button button-danger">Reject</button>
+                    <button type="button" id="save-btn" class="button button-outline">Save edits</button>
+                    <button type="button" id="approve-btn" class="button button-primary">Approve →</button>
+                </div>
+                {% else %}
+                <div class="review-actions">
+                    <span class="status-pill {% if record.status == 'APPROVED' %}status-approved{% else %}status-rejected{% endif %}">
+                        {{ record.get_status_display }}
+                        {% if record.approved_by %} · {{ record.approved_by.username }}{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/records/review_detail.js' %}"></script>
+{% endblock %}

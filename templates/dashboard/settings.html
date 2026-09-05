@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Settings · Mail2Record{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<section id="page-settings">
+    <div class="page-intro page-intro-compact">
+        <div>
+            <span class="eyebrow">SYSTEM</span>
+            <h1>Settings</h1>
+            <p>Local-first configuration. Nothing here leaves this machine.</p>
+        </div>
+    </div>
+
+    <div class="settings-grid">
+        <article class="panel settings-card">
+            <span class="eyebrow">AI EXTRACTION</span>
+            <h2>Local model</h2>
+            <p>Extraction runs against a local LLM via the pluggable AIProvider interface (SRS §16).</p>
+            <div class="setting-line"><span>Provider</span><b>{{ ai_provider }}</b></div>
+            <div class="setting-line"><span>Model</span><b>{{ ai_model|default:"—" }}</b></div>
+            <div class="setting-line"><span>Cloud fallback</span><b>Not configured</b></div>
+        </article>
+
+        <article class="panel settings-card">
+            <span class="eyebrow">EMAIL COLLECTION</span>
+            <h2>Mailbox</h2>
+            <p>Emails are polled by <code>manage.py fetch_emails</code> (Windows Task Scheduler, every 1–5 min).</p>
+            <div class="setting-line"><span>Gmail OAuth token</span>
+                <b class="{% if gmail_connected %}setting-online{% endif %}">{% if gmail_connected %}Connected{% else %}Not connected{% endif %}</b>
+            </div>
+            <div class="setting-line"><span>Duplicate guard</span><b>message_id (unique)</b></div>
+        </article>
+
+        <article class="panel settings-card">
+            <span class="eyebrow">WORKSPACE</span>
+            <h2>Your data</h2>
+            <p>All records are stored as JSONB in PostgreSQL and stay editable until approved.</p>
+            <div class="setting-line"><span>Templates</span><b>{{ template_count }}</b></div>
+            <div class="setting-line"><span>Records</span><b>{{ record_count }}</b></div>
+            <div class="setting-line"><span>Approved</span><b>{{ approved_count }}</b></div>
+            <a class="button button-outline" href="{% url 'records_ui:list' %}">Open records →</a>
+        </article>
+
+        <article class="panel settings-card">
+            <span class="eyebrow">ACCOUNT</span>
+            <h2>{{ user.get_full_name|default:user.username }}</h2>
+            <p>Signed in as <b>{{ user.username }}</b>{% if user.email %} · {{ user.email }}{% endif %}.</p>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="button button-danger">Sign out</button>
+            </form>
+        </article>
+
+        <article class="panel settings-card">
+            <span class="eyebrow">ADMIN</span>
+            <h2>Django admin</h2>
+            <p>Raw access to emails, extractions, templates, and records for troubleshooting.</p>
+            <a class="button button-outline" href="/admin/">Open admin →</a>
+        </article>
+    </div>
+</section>
+{% endblock %}

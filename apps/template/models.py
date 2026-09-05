@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 
 
 class Template(models.Model):
@@ -11,6 +11,10 @@ class Template(models.Model):
     source_file = models.CharField(max_length=500, blank=True)
     version = models.PositiveIntegerField(default=1)
     is_active = models.BooleanField(default=True)
+    is_default = models.BooleanField(
+        default=False,
+        help_text="Pre-selected template for one-click extraction from the inbox.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -19,6 +23,14 @@ class Template(models.Model):
 
     def __str__(self):
         return f"{self.name} (v{self.version})"
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if self.is_default:
+                Template.objects.filter(user_id=self.user_id, is_default=True).exclude(
+                    pk=self.pk
+                ).update(is_default=False)
 
 class DataType(models.TextChoices):
     STRING = "string", "String"
@@ -38,6 +50,11 @@ class TemplateField(models.Model):
         max_length=20, choices=DataType.choices, default=DataType.STRING
     )
     required = models.BooleanField(default=False)
+    is_free_text = models.BooleanField(
+        default=False,
+        help_text="True if this field is NOT derivable from an HTML table and must "
+        "be extracted from the email's free-text body by the AI.",
+    )
     description = models.TextField(blank=True)
     ai_instruction = models.TextField(
         blank=True, help_text="Extra hint given to the LLM for this field"
