@@ -4,12 +4,14 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.extraction.pipeline import run_extraction
 from apps.template.models import Template
 
-from .models import Attachment, Email
-from .serializers import EmailSerializer
+from .models import Attachment, Email, EmailAccount
+from .providers import get_email_provider, guess_imap_host
+from .serializers import EmailAccountSerializer, EmailSerializer
 
 
 class EmailViewSet(
@@ -106,3 +108,100 @@ class EmailViewSet(
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class EmailAccountView(APIView):
+    """The current user's single mailbox connection (Settings page)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        account = EmailAccount.objects.filter(user=request.user).first()
+        if account is None:
+            suggested = None
+            addr = request.query_params.get("email_address")
+            if addr:
+                host, port = guess_imap_host(addr)
+                suggested = {"host": host, "port": port}
+            return Response({"connected": False, "suggested_imap": suggested})
+        return Response({"connected": True, **EmailAccountSerializer(account).data})
+
+    def delete(self, request):
+        EmailAccount.objects.filter(user=request.user).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ImapConnectView(APIView):
+    """Connect (or replace) the user's mailbox via IMAP — tests the login
+    before saving, and stores the app password encrypted."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        email_address = (request.data.get("email_address") or "").strip()
+        password = request.data.get("password") or ""
+        host = (request.data.get("host") or "").strip()
+        port = request.data.get("port")
+
+        if not email_address or not password:
+            return Response(
+                {"detail": "Email address and password are both required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not host:
+            host, port = guess_imap_host(email_address)
+        if not host:
+            return Response(
+                {"detail": "Couldn't work out the IMAP server for this address — "
+                           "enter it manually."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        account = EmailAccount(
+            user=request.user,
+            provider=EmailAccount.Provider.IMAP,
+            email_address=email_address,
+            config={
+                "host": host,
+                "port": int(port or 993),
+                "username": email_address,
+                "mailbox": "INBOX",
+            },
+            is_active=True,
+        )
+        account.credentials = {"password": password}
+
+        try:
+            get_email_provider(account).test_connection()
+        except Exception as exc:  # imaplib raises several distinct error types
+            return Response(
+                {"detail": f"Couldn't connect: {exc}"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        EmailAccount.objects.filter(user=request.user).delete()
+        account.save()
+        return Response(
+            {"connected": True, **EmailAccountSerializer(account).data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class EmailAccountTestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        account = EmailAccount.objects.filter(user=request.user).first()
+        if account is None:
+            return Response(
+                {"detail": "No mailbox connected."}, status=status.HTTP_404_NOT_FOUND
+            )
+        try:
+            get_email_provider(account).test_connection()
+        except Exception as exc:
+            account.mark_synced(ok=False, error=str(exc))
+            return Response(
+                {"ok": False, "detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        account.mark_synced(ok=True)
+        return Response({"ok": True})

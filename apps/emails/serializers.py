@@ -1,6 +1,27 @@
 from rest_framework import serializers
 
-from apps.emails.models import Attachment, Email
+from apps.emails.models import Attachment, Email, EmailAccount
+
+
+class EmailAccountSerializer(serializers.ModelSerializer):
+    """Safe view of a mailbox connection — never exposes credentials or the
+    raw config blob."""
+
+    imap_host = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EmailAccount
+        fields = [
+            "provider", "email_address", "is_active", "imap_host",
+            "last_sync_at", "last_sync_status", "last_sync_error",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = fields
+
+    def get_imap_host(self, obj):
+        if obj.provider != EmailAccount.Provider.IMAP:
+            return None
+        return (obj.config or {}).get("host")
 
 
 class AttachmentSerializer(serializers.ModelSerializer):

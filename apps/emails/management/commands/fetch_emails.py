@@ -1,52 +1,55 @@
-from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
-from apps.emails.gmail_client import fetch_new_messages, get_gmail_service
-from apps.emails.models import Attachment, Email
+from apps.emails.models import Attachment, Email, EmailAccount
+from apps.emails.providers import get_email_provider
 
 
 class Command(BaseCommand):
-    help = "Poll Gmail for new messages and store them, skipping duplicates by message_id."
+    help = (
+        "Poll every connected mailbox for new messages and store them, skipping "
+        "duplicates by message_id. Mailboxes are configured per-user from the "
+        "Settings page (Gmail OAuth or IMAP)."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--user",
             type=str,
-            required=True,
-            help="Username to associate fetched emails with, e.g. --user admin.",
+            help="Only sync this username's mailbox (default: every active mailbox).",
         )
         parser.add_argument("--max-results", type=int, default=25)
 
     def handle(self, *args, **options):
-        User = get_user_model()
-        username = options["user"]
+        accounts = EmailAccount.objects.filter(is_active=True).select_related("user")
+        if options["user"]:
+            accounts = accounts.filter(user__username=options["user"])
+
+        if not accounts.exists():
+            who = f' for "{options["user"]}"' if options["user"] else ""
+            self.stdout.write(f"No mailbox to sync{who}. Connect one from Settings.")
+            return
+
+        for account in accounts:
+            self._sync_account(account, options["max_results"])
+
+    def _sync_account(self, account, max_results):
+        self.stdout.write(f"Syncing {account.email_address} ({account.provider})…")
         try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            available = ", ".join(
-                User.objects.filter(is_active=True).values_list("username", flat=True)
-            ) or "(none)"
-            raise CommandError(f'No user named "{username}". Available: {available}')
-        if not user.is_active:
-            raise CommandError(f'User "{username}" is inactive.')
+            messages = get_email_provider(account).fetch_new_messages(
+                max_results=max_results
+            )
+        except Exception as exc:
+            account.mark_synced(ok=False, error=str(exc))
+            self.stderr.write(self.style.ERROR(f"  Failed: {exc}"))
+            return
 
-        self.stdout.write("Connecting to Gmail…")
-        service = get_gmail_service()
-
-        self.stdout.write("Fetching messages…")
-        messages = fetch_new_messages(service, max_results=options["max_results"])
-
-        created_count = 0
-        skipped_count = 0
-
-        attachment_count = 0
-
+        created = skipped = attachments = 0
         for msg_data in messages:
-            email, created = Email.objects.get_or_create(
+            email, was_created = Email.objects.get_or_create(
                 message_id=msg_data["message_id"],
                 defaults={
-                    "user": user,
+                    "user": account.user,
                     "sender": msg_data["sender"],
                     "recipient": msg_data["recipient"],
                     "subject": msg_data["subject"],
@@ -56,23 +59,23 @@ class Command(BaseCommand):
                     "source": msg_data["source"],
                 },
             )
-            if created:
-                created_count += 1
-                for att in msg_data.get("attachments", []):
-                    Attachment.objects.create(
-                        email=email,
-                        filename=att["filename"],
-                        content_type=att["content_type"],
-                        size=att["size"],
-                        file=ContentFile(att["content"], name=att["filename"]),
-                    )
-                    attachment_count += 1
-            else:
-                skipped_count += 1
+            if not was_created:
+                skipped += 1
+                continue
+            created += 1
+            for att in msg_data.get("attachments", []):
+                Attachment.objects.create(
+                    email=email,
+                    filename=att["filename"],
+                    content_type=att["content_type"],
+                    size=att["size"],
+                    file=ContentFile(att["content"], name=att["filename"]),
+                )
+                attachments += 1
 
+        account.mark_synced(ok=True)
         self.stdout.write(
             self.style.SUCCESS(
-                f"Done. {created_count} new email(s) saved ({attachment_count} attachment(s)), "
-                f"{skipped_count} duplicate(s) skipped."
+                f"  {created} new ({attachments} attachment(s)), {skipped} duplicate(s) skipped."
             )
         )

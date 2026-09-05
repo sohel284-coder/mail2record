@@ -76,12 +76,17 @@
 
                 <div class="rail-spacer"></div>
 
-                <div class="collector-card">
-                    <div class="collector-head"><span class="status-pulse"></span><span>Collector online</span><span class="collector-more">···</span></div>
-                    <p>Gmail · polling every 5 min</p>
+                <a class="collector-card" href="{% url 'dashboard:settings' %}" style="text-decoration:none;color:inherit;display:block;">
+                    {% if sidebar_mailbox %}
+                    <div class="collector-head"><span class="status-pulse"></span><span>{{ sidebar_mailbox.get_provider_display }}</span><span class="collector-more">···</span></div>
+                    <p>{{ sidebar_mailbox.email_address|truncatechars:26 }}</p>
                     <div class="collector-progress"><span></span></div>
-                    <small>Last sync <b id="sync-time">—</b></small>
-                </div>
+                    <small>Last sync <b id="sync-time">{% if sidebar_mailbox.last_sync_at %}{{ sidebar_mailbox.last_sync_at|timesince }} ago{% else %}never{% endif %}</b></small>
+                    {% else %}
+                    <div class="collector-head"><span class="status-pulse" style="background:var(--clay);box-shadow:none;"></span><span>No mailbox</span></div>
+                    <p>Connect one in Settings →</p>
+                    {% endif %}
+                </a>
 
                 <div class="rail-user">
                     <div class="avatar avatar-small">{{ user.username|slice:":2"|upper }}</div>

@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Attachment, Email
+from .models import Attachment, Email, EmailAccount
+
+
+@admin.register(EmailAccount)
+class EmailAccountAdmin(admin.ModelAdmin):
+    list_display = ("user", "provider", "email_address", "is_active", "last_sync_status")
+    list_filter = ("provider", "is_active", "last_sync_status")
+    readonly_fields = ("credentials_encrypted", "last_sync_at", "created_at", "updated_at")
 
 
 class AttachmentInline(admin.TabularInline):

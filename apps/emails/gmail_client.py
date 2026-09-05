@@ -1,52 +1,12 @@
-"""Thin wrapper around the Gmail API for fetching new messages."""
+"""Gmail API message fetching + MIME parsing.
+
+The authenticated ``service`` object is built by ``providers.GmailProvider``
+from the OAuth token stored on the user's ``EmailAccount`` — this module only
+turns a Gmail message into our normalized dict shape.
+"""
 
 import base64
-import os
 from email.utils import parsedate_to_datetime
-
-from django.conf import settings
-from google.auth.exceptions import RefreshError
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-
-CREDENTIALS_DIR = os.path.join(settings.BASE_DIR, "credentials")
-CLIENT_SECRET_FILE = os.path.join(CREDENTIALS_DIR, "gmail_credentials.json")
-TOKEN_FILE = os.path.join(CREDENTIALS_DIR, "gmail_token.json")
-
-
-def get_gmail_service():
-    """
-    Returns an authenticated Gmail API service object.
-    First run opens a browser for the OAuth consent screen; afterwards
-    a refresh token is cached in TOKEN_FILE so this runs headless.
-    """
-    creds = None
-    if os.path.exists(TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            try:
-                creds.refresh(Request())
-            except RefreshError:
-                # Refresh token was expired or revoked (e.g. a Google Cloud
-                # OAuth app still in "Testing" mode expires refresh tokens
-                # after 7 days). It can't be revived — the stale token is
-                # discarded and the code below re-runs the full consent flow.
-                creds = None
-
-        if not creds or not creds.valid:
-            flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
-
-        with open(TOKEN_FILE, "w") as token:
-            token.write(creds.to_json())
-
-    return build("gmail", "v1", credentials=creds)
 
 
 def fetch_new_messages(service, max_results=25):

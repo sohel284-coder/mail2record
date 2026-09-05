@@ -42,3 +42,4 @@ htmlcov/
 /credentials
 
 .claude
+./.claude

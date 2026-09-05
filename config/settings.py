@@ -5,6 +5,7 @@ Environment-driven configuration: every deployment-specific value is read
 from environment variables / a .env file via python-decouple.
 """
 
+import os
 from pathlib import Path
 
 from decouple import Csv, config
@@ -187,3 +188,27 @@ LOGOUT_REDIRECT_URL = "login"
 AI_PROVIDER = config("AI_PROVIDER", "ollama")
 OLLAMA_MODEL = config("OLLAMA_MODEL")
 # END OF LLM CONFIGURATION
+
+
+# Email account connections (per-user mailbox config, set from the UI)
+# Fernet key encrypting stored OAuth tokens / IMAP app passwords at rest.
+# Generate:  python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key())"
+# If unset, a key is derived from SECRET_KEY (fine for local dev; set an explicit
+# key for anything real, and never rotate SECRET_KEY without re-connecting mailboxes).
+EMAIL_CREDENTIALS_KEY = config("EMAIL_CREDENTIALS_KEY", default="")
+
+# Gmail OAuth is hidden from the UI by default — IMAP covers every provider
+# (Gmail included). Set GMAIL_OAUTH_ENABLED=True once the Google Cloud OAuth
+# client is set up (see MAILBOX_SETUP.md) to show the "Connect Gmail" button.
+GMAIL_OAUTH_ENABLED = config("GMAIL_OAUTH_ENABLED", default=False, cast=bool)
+GMAIL_OAUTH_CLIENT_SECRETS_FILE = str(BASE_DIR / "credentials" / "gmail_credentials.json")
+GMAIL_OAUTH_REDIRECT_URI = config(
+    "GMAIL_OAUTH_REDIRECT_URI",
+    default="http://localhost:8000/emails/oauth/gmail/callback/",
+)
+
+# Google's OAuth libs refuse plain-http redirects and get fussy about scope
+# order unless told otherwise — both are fine for a localhost desktop install.
+if DEBUG:
+    os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")

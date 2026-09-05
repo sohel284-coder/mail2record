@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Settings · Mail2Record{% endblock %}
 {% block page_title %}Settings{% endblock %}
 
@@ -12,6 +13,15 @@
         </div>
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+        <div class="review-banner {% if message.tags == 'error' %}is-warning{% endif %}">
+            <span class="banner-mark">{% if message.tags == 'error' %}!{% else %}✓{% endif %}</span>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    {% endif %}
+
     <div class="settings-grid">
         <article class="panel settings-card">
             <span class="eyebrow">AI EXTRACTION</span>
@@ -22,14 +32,39 @@
             <div class="setting-line"><span>Cloud fallback</span><b>Not configured</b></div>
         </article>
 
-        <article class="panel settings-card">
+        <article class="panel settings-card" id="mailbox-card">
             <span class="eyebrow">EMAIL COLLECTION</span>
             <h2>Mailbox</h2>
-            <p>Emails are polled by <code>manage.py fetch_emails</code> (Windows Task Scheduler, every 1–5 min).</p>
-            <div class="setting-line"><span>Gmail OAuth token</span>
-                <b class="{% if gmail_connected %}setting-online{% endif %}">{% if gmail_connected %}Connected{% else %}Not connected{% endif %}</b>
-            </div>
-            <div class="setting-line"><span>Duplicate guard</span><b>message_id (unique)</b></div>
+            {% if email_account %}
+                <p>Polled by <code>manage.py fetch_emails</code> (Windows Task Scheduler, every 1–5 min).</p>
+                <div class="setting-line"><span>Provider</span><b>{{ email_account.get_provider_display }}</b></div>
+                <div class="setting-line"><span>Address</span><b>{{ email_account.email_address }}</b></div>
+                {% if email_account.provider == 'imap' %}
+                <div class="setting-line"><span>IMAP host</span><b>{{ email_account.config.host }}</b></div>
+                {% endif %}
+                <div class="setting-line"><span>Last sync</span>
+                    <b class="{% if email_account.last_sync_status == 'ok' %}setting-online{% endif %}">
+                        {% if email_account.last_sync_at %}{{ email_account.last_sync_at|date:"d M H:i" }}
+                        {% else %}never{% endif %}
+                        {% if email_account.last_sync_status == 'error' %} · failed{% endif %}
+                    </b>
+                </div>
+                {% if email_account.last_sync_error %}
+                <p class="hint" style="color:#94513f;">{{ email_account.last_sync_error|truncatechars:160 }}</p>
+                {% endif %}
+                <div style="display:flex;gap:8px;margin-top:14px;">
+                    <button type="button" id="mailbox-test-btn" class="button button-outline">Test connection</button>
+                    <button type="button" id="mailbox-disconnect-btn" class="button button-danger">Disconnect</button>
+                </div>
+            {% else %}
+                <p>No mailbox connected yet. Works with Gmail, Outlook, Yahoo, or any other provider over IMAP — use an app-specific password.</p>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+                    <button type="button" id="mailbox-imap-btn" class="button button-primary">Connect a mailbox →</button>
+                    {% if gmail_oauth_enabled %}
+                    <a class="button button-outline" href="{% url 'emails_oauth:gmail_start' %}">Connect Gmail with OAuth</a>
+                    {% endif %}
+                </div>
+            {% endif %}
         </article>
 
         <article class="panel settings-card">
@@ -60,4 +95,45 @@
         </article>
     </div>
 </section>
+
+<div id="imap-modal" class="modal-overlay">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="imap-modal-title" style="max-width:460px;">
+        <h2 id="imap-modal-title">Connect via IMAP</h2>
+        <p>Works with Outlook, Yahoo, corporate mail, and Gmail. Use an
+           <strong>app-specific password</strong>, not your normal login password.</p>
+
+        <label style="display:block;margin-top:16px;">
+            <span class="hint" style="text-transform:uppercase;letter-spacing:.1em;">Email address</span>
+            <input type="email" id="imap-email" autocomplete="email"
+                   style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--rule);border-radius:3px;background:#fbf9f4;font:12px var(--mono);">
+        </label>
+        <label style="display:block;margin-top:12px;">
+            <span class="hint" style="text-transform:uppercase;letter-spacing:.1em;">App password</span>
+            <input type="password" id="imap-password" autocomplete="off"
+                   style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--rule);border-radius:3px;background:#fbf9f4;font:12px var(--mono);">
+        </label>
+        <div style="display:flex;gap:10px;margin-top:12px;">
+            <label style="flex:2;">
+                <span class="hint" style="text-transform:uppercase;letter-spacing:.1em;">IMAP host <span id="imap-host-guess"></span></span>
+                <input type="text" id="imap-host" placeholder="auto-detected"
+                       style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--rule);border-radius:3px;background:#fbf9f4;font:12px var(--mono);">
+            </label>
+            <label style="flex:1;">
+                <span class="hint" style="text-transform:uppercase;letter-spacing:.1em;">Port</span>
+                <input type="number" id="imap-port" value="993"
+                       style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--rule);border-radius:3px;background:#fbf9f4;font:12px var(--mono);">
+            </label>
+        </div>
+        <p id="imap-error" class="hint" style="color:#94513f;margin-top:10px;display:none;"></p>
+
+        <div class="modal-actions">
+            <button type="button" id="imap-cancel" class="button button-ghost">Cancel</button>
+            <button type="button" id="imap-connect" class="button button-primary">Test &amp; connect</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard/settings.js' %}"></script>
 {% endblock %}

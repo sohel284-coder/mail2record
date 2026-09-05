@@ -3,6 +3,65 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
+from .crypto import decrypt_dict, encrypt_dict
+
+
+class EmailAccount(models.Model):
+    """One mailbox connection per user, configured from the Settings UI.
+
+    Credentials (an OAuth token bundle for Gmail, or an app password for IMAP)
+    are encrypted at rest — see ``crypto.py``. Nothing here is ever sent back
+    to the frontend except the provider name, the address, and sync status.
+    """
+
+    class Provider(models.TextChoices):
+        GMAIL = "gmail", "Gmail"
+        IMAP = "imap", "IMAP (Outlook, Yahoo, other)"
+
+    class SyncStatus(models.TextChoices):
+        NEVER = "", "Never synced"
+        OK = "ok", "OK"
+        ERROR = "error", "Error"
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="email_account"
+    )
+    provider = models.CharField(max_length=20, choices=Provider.choices)
+    email_address = models.EmailField()
+    config = models.JSONField(default=dict, blank=True)  # imap host/port/username/mailbox
+    credentials_encrypted = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    last_sync_at = models.DateTimeField(null=True, blank=True)
+    last_sync_status = models.CharField(
+        max_length=20, choices=SyncStatus.choices, blank=True, default=SyncStatus.NEVER
+    )
+    last_sync_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.email_address} ({self.provider})"
+
+    @property
+    def credentials(self) -> dict:
+        return decrypt_dict(self.credentials_encrypted)
+
+    @credentials.setter
+    def credentials(self, value):
+        self.credentials_encrypted = encrypt_dict(value or {})
+
+    def mark_synced(self, ok: bool, error: str = ""):
+        from django.utils import timezone
+
+        self.last_sync_status = self.SyncStatus.OK if ok else self.SyncStatus.ERROR
+        self.last_sync_error = error
+        self.last_sync_at = timezone.now()
+        self.save(
+            update_fields=[
+                "last_sync_status", "last_sync_error", "last_sync_at", "updated_at",
+            ]
+        )
+
 
 class Email(models.Model):
     user = models.ForeignKey(

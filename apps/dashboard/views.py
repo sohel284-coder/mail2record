@@ -1,10 +1,8 @@
-import os
-
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
-from apps.emails.models import Email
+from apps.emails.models import Email, EmailAccount
 from apps.records.models import Record
 from apps.template.models import Template
 
@@ -28,12 +26,12 @@ def index(request):
 @login_required
 def settings_page(request):
     user = request.user
-    token_path = os.path.join(settings.BASE_DIR, "credentials", "gmail_token.json")
     context = {
         "active_page": "settings",
         "ai_provider": settings.AI_PROVIDER,
         "ai_model": getattr(settings, "OLLAMA_MODEL", ""),
-        "gmail_connected": os.path.exists(token_path),
+        "email_account": EmailAccount.objects.filter(user=user).first(),
+        "gmail_oauth_enabled": settings.GMAIL_OAUTH_ENABLED,
         "template_count": Template.objects.filter(user=user).count(),
         "record_count": Record.objects.filter(user=user).count(),
         "approved_count": Record.objects.filter(user=user, status=Record.Status.APPROVED).count(),

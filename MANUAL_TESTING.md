@@ -60,14 +60,24 @@ linking into review. "See all drafts →" goes to the review queue.
 
 ## 4. Collect email  (SRS §11)
 
-**Option A — real Gmail:**
-```bash
-uv run python manage.py fetch_emails --user <username>
-```
-First run opens a browser for OAuth; the token is cached afterwards. Re-running
-skips anything already stored (dedup on `message_id`).
+**Connect a mailbox first** — `/settings/` → **Mailbox** card:
+- **Connect Gmail** — OAuth redirect. Needs `credentials/gmail_credentials.json`
+  (Google OAuth *client* secrets) and the redirect URI
+  `http://localhost:8000/emails/oauth/gmail/callback/` registered on that client
+  in Google Cloud Console.
+- **Connect via IMAP** — works for Outlook, Yahoo, corporate mail, and Gmail.
+  Enter the address + an **app-specific password** (not your login password);
+  the IMAP host auto-fills from the domain. Connection is tested before saving.
 
-**Option B — no Gmail set up:** create a test email in the Django shell:
+Then poll:
+```bash
+uv run python manage.py fetch_emails            # every connected mailbox
+uv run python manage.py fetch_emails --user <username>   # just one
+```
+Re-running skips anything already stored (dedup on `message_id`). Sync status /
+errors show on the Settings Mailbox card and the sidebar.
+
+**No mailbox / offline testing:** create a test email in the Django shell:
 ```bash
 uv run python manage.py shell
 ```
@@ -159,8 +169,9 @@ Direct URLs: `/exports/records.csv?status=APPROVED&template=<id>`,
 
 ## 9. Settings  (SRS §16)
 
-`/settings/` — read-only status: AI provider + model, Gmail token connected?,
-template/record counts, links to records and Django admin, sign out.
+`/settings/` — AI provider + model, the **Mailbox** connection (connect Gmail
+via OAuth / connect any provider via IMAP, test, disconnect), template/record
+counts, links to records and Django admin, sign out.
 
 ## 10. Original data is preserved  (SRS §17)
 
